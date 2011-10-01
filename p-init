@@ -1,0 +1,22 @@
+#!/bin/sh
+# needs proper alias p to our new perl
+if [ -n "$1" ]; then
+    echo "alias p=$1" > ~/.alias-perl
+fi
+source ~/.alias-perl
+cat ~/.alias-perl
+
+echo p -S cpan YAML DBI DBD::SQLite CPAN::SQLite
+p -S cpan -j ~/.cpan/CPAN/nosqlite.pm YAML DBI DBD::SQLite CPAN::SQLite
+
+echo p -S cpan Bundle::CPANReporter2 B::Flags Opcodes '$(cat ~/Perl/B-C/t/top100)'
+p -S cpan Bundle::CPANReporter2 B::Flags Opcodes $(cat ~/Perl/B-C/t/top100)
+
+echo "more? (or Ctrl-C)"
+read more
+# Class::MethodMaker rm SIGNATURE
+p -S cpan Bundle::CygwinVendor YAML::XS DBIx::Class 
+# missing deps
+p -S cpan SQL::Abstract Module::Find
+perl -lne '/=item L<(.+?)[\|>]/ and print $1' /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm \
+    | xargs p -S cpan

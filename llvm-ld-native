@@ -1,0 +1,21 @@
+#!/bin/bash
+# wrap only for external shared libs if -link-as-library -native
+# but not for libperl.so -disable-internalize
+
+case "$*" in
+ "*-disable-internalize *")  
+  llvm-ld $*
+  ;;
+ "* -link-as-library -native *")
+  if getopts "o:" opt; then
+    o=$OPTARG
+    args=`echo "$@"|sed -e's/-o [^ ]* //'`
+    llvm-ld $args -o a.out && llc a.out -o - | as -o $o
+  else
+    llvm-ld $*
+  fi
+  ;;
+ "*")
+  llvm-ld $*
+  ;;
+esac

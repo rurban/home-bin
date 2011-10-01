@@ -1,0 +1,15 @@
+#!/bin/sh
+params=""
+for f in "$@"; do
+  n="$f"
+  case "$f" in
+  */*)  n=$(echo "$f"|/bin/sed -e's,/,::,g')
+	;;
+  *-*)  n=$(echo "$f"|/bin/sed -e's,-,::,g')
+	;;
+  esac
+  params="$params $n"
+done
+echo cpan $params
+cpan $params
+

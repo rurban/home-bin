@@ -1,0 +1,303 @@
+#!/bin/bash
+# Test a perl module on some of my remote machines (vm's or whatever).
+# Must be started in the root build_dir of the branch
+
+declare -a vm_name
+declare -a vm_dir
+declare -a vm_conf
+declare -a vm_perl
+declare -a vm_make
+#PERLCORE=
+
+function vcmd {
+    test -n "$QUIET" || echo $*
+    $*
+}
+
+
+# vm_vmx listed by /cygdrive/c/Programme/VMware/VMware\ Workstation/vmrun list
+# start stop
+function check_and_start_vm {
+    vmx="$1"
+    search="$2"
+    test -z "$vmx" && return -1
+    vmrun="~/bin/vmrun" #/cygdrive/c/Programme/VMware/VMware\ Workstation/vmrun"
+    if [ $HOSTNAME == 'reini' ]; then
+        vmlist=$(vmrun list)
+        (echo $vmlist | grep -- $2) || (vmrun start "'$vmx'"; sleep 15s)
+    else
+        ssh reini "($vmrun list | grep -- $2) || ($vmrun \"$vmx\" start; sleep 15s)"
+    fi
+    /bin/true
+}
+function check_and_ask_vm {
+    vmx="$1"
+    search="$2"
+    test -z "$vmx" && return -1
+    vmrun="~/bin/vmrun" #/cygdrive/c/Programme/VMware/VMware\ Workstation/vmrun"
+    if [ $HOSTNAME == 'reini' ]; then
+        vmlist=$(vmrun list)
+        if [ -z "$(echo $vmlist | grep -- $2)" ]; then
+            echo -n "vmrun start '$vmx'; sleep 15s or Ctrl-C to break?"
+            read
+            vmrun start "'$vmx'"; sleep 15s
+        fi
+    else
+        if [ -z $(ssh reini "$vmrun list | grep -- \"$2\"") ]; then
+            echo -n "vmrun start '$vmx'; sleep 15s or Ctrl-C to break?"
+            read
+            ssh reini "$vmrun \"$vmx\" start; sleep 15s"
+        fi
+    fi
+    /bin/true
+}
+
+# curr dirname
+base=$(basename `pwd`)
+if [ "${base:0:5}" = "perl-" ]; then
+  PERLCORE=1
+  # the perl source
+  prefix=/usr/src/perl
+else
+  # a perl module
+  prefix=Perl
+fi
+
+which="debian debian64 centos5 centos54 freebsd7 solaris10 openbsd"
+ssh="perl514"
+which="ssh $which"
+
+# define my various vm's by name and special overrides
+n=0
+
+vm_name[$n]=perl514
+let n+=1
+
+# freebsd7 has gcc-4.2 and llvm-2.3
+vm_name[$n]=freebsd7
+vm_vmx[$n]='C:\Virtual Machines\freebsd-7.0-i386\freebsd-7.0-i386.vmx'
+vm_vmx_s[$n]=freebsd-7.0-i386
+vm_perls[$n]="5.8.8 5.10.1"
+#vm_dir[$n]=/usr/src/perl/$base
+vm_make[$n]=gmake
+let n+=1
+
+# define llvm conf_args: cc and link
+vm_name[$n]=freebsd7-llvm
+vm_vmx[$n]='C:\Virtual Machines\freebsd-7.0-i386\freebsd-7.0-i386.vmx'
+vm_vmx_s[$n]=freebsd-7.0-i386
+vm_dir[$n]=/usr/src/perl/parrot
+vm_conf[$n]="--cc=llvm-gcc --ld=llvm-ld --link=llvm-ld"
+vm_make[$n]=gmake
+let n+=1
+
+vm_name[$n]=freebsd8
+vm_vmx[$n]='F:\Virtual Machines\freebsd-8.0-amd64\freebsd-8.0-amd64.vmx'
+vm_vmx_s[$n]=freebsd-8.0-amd64
+#vm_perls[$n]="5.10.1"
+#vm_dir[$n]=/usr/src/perl/$base
+vm_make[$n]=make
+let n+=1
+
+# on debian-4 I test trunk and branches
+# gcc-4.1.2
+vm_name[$n]=debian
+vm_vmx[$n]='C:\Virtual Machines\debian-40r0-i386-netinst\debian-40r0-i386-netinst.vmx'
+vm_vmx_s[$n]='debian-40r0-i386-netinst'
+vm_perls[$n]="5.00505 5.6.2 5.8.8 5.10.0d 5.10.1 5.11.0d"
+#vm_make[$n]=make
+vm_ulimit[$n]="ulimit -v 60000 -u 30;"
+#conf="-ggdb3 $(ssh ${vm_name[$n]} perl -V::ccflags:)"
+#vm_conf[$n]="--ccflags='-O0 -ggdb3 -D_REENTRANT -D_GNU_SOURCE -DTHREADS_HAVE_PIDS -DDEBIAN -fno-strict-aliasing -pipe -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64'"
+#vm_conf[$n]="--optimize='-O0 -ggdb3'"
+let n+=1
+
+vm_name[$n]=debian64
+vm_vmx[$n]='C:\Virtual Machines\debian-500-amd64\debian64.vmx'
+vm_vmx_s[$n]='debian-500-amd64'
+#vm_make[$n]=make
+vm_perls[$n]="5.10.0 5.12.2 5.12.2d 5.12.2d-nt 5.13.6d 5.13.6d-nt"
+vm_conf[$n]=""
+#vm_ulimit[$n]="ulimit -v 100000 -u 30;"
+let n+=1
+
+# llvm
+#vm_name[$n]=debian5-64
+#vm_vmx[$n]='C:\Virtual Machines\debian-500-amd64\Other Linux 2.6.x kernel 64-bit.vmx'
+#vm_conf[$n]="--cc=llvm-gcc --ld=llvm-ld --ldflags='-native' --link=llvm-ld"
+# clang
+#let n+=1
+
+# debian64 16-byte long double
+#vm_name[$n]=debian5-64
+#vm_vmx[$n]='C:\Virtual Machines\debian-500-amd64\Other Linux 2.6.x kernel 64-bit.vmx'
+#vm_make[$n]=make
+#vm_conf[$n]="--m=64 --ccflags='-m128bit-long-double -O0 -ggdb3 -D_REENTRANT -D_GNU_SOURCE -DTHREADS_HAVE_PIDS -DDEBIAN -fno-strict-aliasing -pipe -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64' --floatval='long double'"
+#vm_conf[$n]="--floatval='long double'"
+#let n+=1
+
+vm_name[$n]=centos5
+vm_vmx[$n]='C:\Virtual Machines\centos-5.0-i386-server\centos-5.0-i386-server.vmx'
+vm_vmx_s[$n]=centos-5.0-i386-server
+vm_perls[$n]="5.6.2 5.8.8 5.10.1"
+let n+=1
+
+vm_name[$n]=centos54
+vm_vmx[$n]='F:\Virtual Machines\centos-5.4-x86_64-server\centos-5.4-x86_64-server.vmx'
+vm_vmx_s[$n]=centos-5.4-x86_64-server
+#vm_perls[$n]="5.6.2 5.8.8 5.10.1"
+let n+=1
+
+#sol10, 64bit 8-byte double (_4)
+vm_name[$n]=solaris10
+vm_vmx[$n]='C:\Virtual Machines\Solaris 10\Solaris 10.vmx'
+vm_vmx_s[$n]='Solaris'
+vm_perls[$n]="5.8.4"
+#vm_conf[$n]="--m=64 --ccflags='-m64 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_TS_ERRNO' --ldflags='-m64' --linkflags='-m64'"
+#vm_make[$n]=/opt/SunStudioExpress/bin/dmake
+vm_make[$n]=gmake
+let n+=1
+
+#sol10, 64bit 16-byte double (_5)
+#vm_name[$n]=sol10_5
+#vm_vmx[$n]='C:\Virtual Machines\Solaris 10\Solaris 10.vmx'
+#vm_conf[$n]="--ccflags='-m64 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_TS_ERRNO' --ldflags='-m64' --linkflags='-m64' --floatval='long double'"
+#vm_make[$n]=/opt/SunStudioExpress/bin/dmake
+#vm_make[$n]=gmake
+#let n+=1
+
+#solaris10 32bit default (same as perl)
+#vm_name[$n]=opensolaris
+#vm_vmx[$n]='C:\Virtual Machines\Solaris 10\Solaris 10.vmx'
+#vm_conf[$n]=""
+#vm_make[$n]=/opt/SunStudioExpress/bin/dmake
+#vm_make[$n]=gmake
+#let n+=1
+
+#solaris10 32bit 12-byte long double. failing
+#vm_name[$n]=solgcc
+#vm_vmx[$n]='C:\Virtual Machines\Solaris 10\Solaris 10.vmx'
+#vm_dir[$n]=/usr/src/perl/parrot
+#vm_conf[$n]="--cc=gcc --ccflags='' --link=ld --floatval='long double'"
+#vm_make[$n]=gmake
+#let n+=1
+
+#vm_name[$n]=solgcc
+#vm_vmx[$n]='C:\Virtual Machines\Solaris 10\Solaris 10.vmx'
+#vm_conf[$n]="--cc=gcc --ccflags='' --link=ld"
+#vm_make[$n]=gmake
+#let n+=1
+
+#vm_name[$n]=gentoo
+#vm_perls[$n]="5.8.4"
+#let n+=1
+
+# 12-byte double (_2)
+#vm_name[$n]=gentoo-ld
+#vm_conf[$n]="--floatval='long double'"
+#vm_conf[$n]="--floatval='long double' --jitcapable=0"
+#let n+=1
+
+#vm_name[$n]=gentooicc
+#vm_conf[$n]="--cc=icc --ld=icc"
+#let n+=1
+
+vm_name[$n]=openbsd
+vm_perl[$n]=perl5.8.6
+vm_perls[$n]="5.8.6"
+vm_vmx[$n]='C:\Virtual Machines\openbsd-3.8\OpenBSD.vmx'
+vm_vmx_s[$n]=openbsd-3.8
+#vm_conf[$n]="--parrot_is_shared --ldflags='-shared'"
+let n+=1
+
+#vm_name[$n]=fedora10
+#vm_dir[$n]=/usr/src/perl/parrot
+#let n+=1
+
+#vm_name[$n]=ubuntu
+#vm_dir[$n]=/usr/src/perl/parrot
+#let n+=1
+
+if [ -n "$PERLCORE" -a ! -f Configure.pl ]; then
+    echo "$0 must be run in a perl dir. Configure.pl not found"
+    exit
+fi
+#if [ -f Makefile ]; then
+#    make clean realclean archclean
+#    find -name \*.exe -o -name \*.bak -o -name \*~ -o -name \*.stackdump -delete
+#fi
+if [ ! -f MANIFEST ]; then
+    echo "MANIFEST not found"
+    exit 1
+fi
+if [ MANIFEST -nt MANIFEST.files ]; then
+    echo "Creating MANIFEST.files"
+    perl -ane'print "$F[0]\n" unless /^#/' MANIFEST > MANIFEST.files
+fi
+
+n=0
+while [ -n "${vm_name[${n}]}" ]
+do
+    date=$(date +%Y-%m-%d_%H-%M)
+    name="${vm_name[${n}]}"
+    dir="${vm_dir[${n}]:=$prefix/$base}"
+    make="${vm_make[$n]:=make}"
+    vmx="${vm_vmx[$n]}"
+    perl="${vm_perl[$n]:=perl}"
+    ulimit="${vm_ulimit[$n]:=}" 
+    if [ -z "${1}" -a "$vmx" ]; then check_and_start_vm "$vmx" "${vm_vmx_s[$n]}" || name="" ; fi
+    [ "${1}" = "${name}" -a "$vmx" ] && check_and_ask_vm "$vmx" "${vm_vmx_s[$n]}"
+    # accept the machine name as first arg
+    if [ -z "${1}" -o "${1}" = "${name}" ]; then
+        # -up
+        if [ "${name}" = "xopenbsd" ]; then
+            # I didn't get rsync working on openbsd
+            #echo "for f in \$(cat MANIFEST.files); do scp \$f ${name}:${dir}/\$f; done"
+            for f in $(cat MANIFEST.files); do scp -r "$f" "${name}:${dir}/$f"; done | tee log.up-${name}-$date
+        else
+            echo "ssh ${name} cd ${dir}"
+	    ssh ${name} "cd ${dir}"
+            echo "rsync -avzC --delete --files-from=MANIFEST.files . ${name}:${dir}/"
+            rsync -avzC --delete --files-from=MANIFEST.files . "${name}:${dir}/" \
+                | grep -Ev "/$" | tee log.up-${name}-$date
+        fi
+        if [ "${2}" = "-up" ]; then exit; fi
+
+        # perlall-maketest #-conf -make -test
+        if [ -z "${2}" ]; then
+	    if [ -z "$PERLCORE" ]; then
+		echo ssh ${name} "cd ${dir}; $ulimit ~/bin/perlall-maketest"
+		ssh ${name} "cd ${dir}; $ulimit ~/bin/perlall-maketest" | tee log.test-${name}-$date
+		vcmd rsync -avzC "${name}:${dir}/log.test* ."
+		ssh ${name} "cd ${dir};[ -d .svn ] || exit;for m in log.modules*;do if [ \"\$m\" = \"${m%-${name}}\" ]; then mv \"\$m\" \"\$m-${name}\";fi;done"
+		vcmd rsync -avzC "${name}:${dir}/log.modules* ."
+	    else
+		vcmd ssh ${name} "cd ${dir}; $make realclean; echo ./Configure \"${vm_conf[${n}]}\" > log.conf; (./Configure ${vm_conf[${n}]} | tee -a log.conf) && $make all | tee log.make" | tee log.make-${name}-$date
+		vcmd ssh ${name} "cd ${dir}; $make test | tee log.test" | tee log.test-${name}-$date
+	    fi
+        else
+            if [ "${2}" = "-conf" ]; then 
+            	vcmd ssh ${name} "cd ${dir}; echo ./Configure.pl \"${vm_conf[${n}]}\" > log.conf; ./Configure ${vm_conf[${n}]} | tee -a log.conf" | tee log.conf-${name}-$date
+            fi
+            if [ "${2}" = "-make" ]; then 
+            	vcmd ssh ${name} "cd ${dir}; (perl Makefile.PL; make) | tee log.make-${name}-$date" | tee log.make-${name}-$date
+            fi
+            if [ "${2}" = "-test" ]; then 
+            	vcmd ssh ${name} "cd ${dir}; $ulimit $make test TEST_VERBOSE=1| tee log.test-${name}-$date" | tee log.test-${name}-$date
+            fi
+            if [ "${2}" = "-smoke" ]; then
+                vcmd ssh ${name} "cd ${dir}; $make realclean; echo $perl Configure.pl \"${vm_conf[${n}]}\" > log.conf; ($perl Configure.pl ${vm_conf[${n}]} | tee -a log.conf) && $make smoke | tee log.smoke" | tee log.smoke-${name}-$date
+            fi
+        fi
+        if [ -z "${1}" ]; then shift; fi
+    fi
+
+    let n+=1
+    #sleep 30s
+done
+
+if [ -z $found ]; then
+    echo "$0 vm [OPTION]"
+    echo "valid vm's: $which"
+    echo "Options: -up. perl-CORE: -conf -make -test -smoke"
+fi

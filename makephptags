@@ -1,0 +1,4 @@
+#! /bin/sh
+
+/usr/bin/mv -f TAGS TAGS~ 2>/dev/null
+/usr/bin/find  \( -iname \*.php -o -iname \*.php4 -o -iname \*.inc \) -exec etags -a --language-force=php \{\} \;

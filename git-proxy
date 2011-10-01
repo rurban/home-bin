@@ -1,0 +1,5 @@
+#!/bin/sh
+echo git-proxy: curl $*
+GIT_CURL_VERBOSE=1
+GIT_SSL_NO_VERIFY=1
+exec curl -k --proxy-ntlm -x grz-proxy.avl01.avlcorp.lan:8080 -U URBANR:reini018 $*

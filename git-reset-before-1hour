@@ -1,0 +1,2 @@
+#!/bin/sh
+git reset --hard "master@{1 hour ago}"

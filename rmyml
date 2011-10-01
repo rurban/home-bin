@@ -1,0 +1,2 @@
+#!/bin/sh
+for y in *.yml; do d=${y%.yml}; test -d "$d" || rm -v "$y"; done

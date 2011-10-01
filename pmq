@@ -1,0 +1,387 @@
+#!/opt/local/bin/perl -w
+
+eval 'exec /opt/local/bin/perl -w -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+
+=pod
+
+=head1 NAME
+
+pmq - Report the installed version of Perl modules.
+
+=head1 SYNOPSIS
+
+C<pmq [-f] [-H | -h] [--method (parse | load | fork)] module...>
+
+C<pmq [-f] [--method (eval | load | fork)] --all>
+
+=head1 DESCRIPTION
+
+Look for the given Perl modules in PerlE<39>s include path and report
+on whether they are installed, and if so with what version number.
+With B<--all>, all modules on the system are listed.
+
+There are three methods to find out the status of a module.  The
+fastest and default is 'eval' which examines the moduleE<39>s program
+text for a line setting $VERSION, and evaluates that one line.  The
+method 'load' is more thorough, it tries to load the whole module and
+then asks for the value of $VERSION.  Because some modules can have
+strange side-effects when loaded, the slowest method 'fork' loads each
+module in a separate process.
+
+Be warned that all methods will execute at least some of the
+moduleE<39>s code, but if you have installed a module into your perl
+search path you probably trust it anyway.
+
+Following grep(1), the name of each module is printed before its
+status if more than one module (or 'all') is specified, but this
+name-printing can be forced on with B<-H> or B<--with-name> and
+suppressed with B<-h> or B<--no-name>.
+
+B<--with-filename> or B<-f> print the filename of the .pm file used
+after the version check result.
+
+B<--help> prints a help message to standard output and B<--version>
+reports on the version number of pmq itself.
+
+=head1 SEE ALSO
+
+L<perl(1)>.
+
+=head1 AUTHOR
+
+Ed Avis, ed@membled.com
+
+=begin comment
+
+=pod SCRIPT CATEGORIES
+
+CPAN
+
+UNIX : System_administration
+
+=pod OSNAMES
+
+any
+
+=pod README
+
+This tool is intended to be a user-friendly answer to the two FAQs,
+'how do I find what version of a Perl module is installed?' and 'how
+do I list all modules installed on the system?' 
+
+'pmq Date::Manip' will print the version of the Date::Manip module, or
+'(failed)' if the module is not installed, or for some modules which
+donE<39>t carry version information, '(unknown)'. 'pmq --all' will print
+every module found in PerlE<39>s include path with its version.
+
+=end comment
+
+=cut
+
+use strict;
+use Getopt::Long; Getopt::Long::Configure('bundling');
+
+# Odd formatting so MakeMaker can parse.
+my $VERSION;
+$VERSION = '0.1.4';
+
+sub load_module( $ );
+sub load_module_fork( $ );
+sub parse_version( $ );
+sub all_mods( $ );
+sub print_ver( $$ );
+
+sub usage( $ ) {
+    my $msg = <<END
+Usage: $0 OPTIONS module...
+or:    $0 OPTIONS --all
+List the version installed of the given Perl modules, or all modules.
+Example: $0 Date::Manip
+
+  --with-name, -H     always print the name of modules
+  --no-name, -h       never print the name of modules
+  --with-filename, -f print the filename of the .pm file
+  --all               list all modules installed
+  --method=eval       evaluate the VERSION line         (default)
+  --method=load       actually load each module         (slower)
+  --method=fork       load each module in a new process (slowest)
+  --help, --version   report information about pmq
+
+Report bugs to <ed\@membled.com>.
+END
+  ;
+
+    if (shift) {
+	print STDOUT $msg;
+	exit(0);
+    }
+    else {
+	print STDERR $msg;
+	exit(1);
+    }
+}
+
+my $all = 0;
+my ($with_name, $no_name, $with_filename) = (0, 0, 0);
+my $method = 'eval';
+my ($opt_help, $opt_version) = (0, 0);
+GetOptions
+  (
+   'all'             => \$all,
+   'with-name|H'     => \$with_name,
+   'no-name|h'       => \$no_name,
+   'with-filename|f' => \$with_filename,
+   'method=s'        => \$method,
+   'help'            => \$opt_help,
+   'version'         => \$opt_version,
+  )
+  or usage(0);
+
+usage(1) if $opt_help;
+
+if ($opt_version) {
+    print <<END
+pmq version $VERSION
+Written by Ed Avis.
+
+This program is in the public domain, which means there are no
+copyright restrictions.  Use at your own risk.
+END
+  ;
+    exit(0);
+}
+
+if ($method eq 'parse') {
+    die
+      "There is currently no method which just parses the module's code.
+The name 'parse' in earlier versions of pmq was misleading.  If you
+are prepared to execute some code from each module, use --method eval
+or leave the method unspecified.\n";
+}
+if ($method ne 'eval' and $method ne 'load' and $method ne 'fork') {
+    die "cannot specify two different methods\n";
+}
+my $need_filename = 0;
+if ($method eq 'eval') {
+    $need_filename = 1;
+    require ExtUtils::MakeMaker; import ExtUtils::MakeMaker;
+    require ExtUtils::MM_Unix;
+}
+
+if (not @ARGV and not $all) {
+    usage(0);
+}
+elsif (not @ARGV and $all) {
+    # List all modules, okay.
+}
+elsif (@ARGV and not $all) {
+    # List particular modules, okay.
+}
+elsif (@ARGV and $all) {
+    die "cannot specify both --all/-a and names of modules\n";
+}
+else { die }
+
+my $print_name; # print the names of modules
+if (not $with_name and not $no_name) {
+    $print_name = (@ARGV > 1) || $all;
+}
+elsif (not $with_name and $no_name) {
+    $print_name = 0;
+}
+elsif ($with_name and not $no_name) {
+    $print_name = 1;
+}
+elsif ($with_name and $no_name) {
+    die "cannot specify both -H/--with-filename and -h/--no-filename\n";
+}
+else { die }
+
+my $print_filename; # print the filenames
+$print_filename = $with_filename || 0;
+
+if ($all) {
+    all_mods(\&print_ver);
+}
+else {
+    foreach my $m (@ARGV) {
+	if ($need_filename) {
+	    my $found = 0;
+	    (my $f = $m) =~ s!::!/!g;
+	    $f .= '.pm';
+	    foreach (@INC) {
+		my $file = "$_/$f";
+		if (-e $file) {
+		    print_ver($m, $file);
+		    $found = 1;
+		    last;
+		}
+	    }
+	    if (not $found) {
+		print_ver($m, undef);
+	    }
+	}
+	else {
+	    print_ver($m, undef);
+	}
+    }
+}
+
+# Arguments:
+#   module name
+#   filename
+#
+sub print_ver( $$ ) {
+    my ($m, $f) = @_;
+    print "$m:\t" if $print_name;
+    my $r;
+    if ($method eq 'eval') {
+	if (defined $f) {
+	    $r = parse_version($f);
+	}
+	else {
+	    # No filename known.
+	    $r = [ 0, undef ];
+	}
+    }
+    elsif ($method eq 'load') {
+	$r = load_module($m);
+    }
+    elsif ($method eq 'fork') {
+	$r = load_module_fork($m);
+    }
+    else { die }
+
+    my ($ok, $more) = @$r;
+    if (not $ok) {
+	# Ignore the particular reasons for failure.
+	print '(failed)';
+    }
+    else {
+	undef $more if defined $more and $more !~ tr/0-9//;
+	$more = '(unknown)' if not defined $more;
+	print $more;
+    }
+
+    if (defined $f) {
+	print "\t$f" if $print_filename;
+    }
+    print "\n";
+}
+
+# Arguments:
+#   module name
+#
+sub load_module( $ ) {
+    my $m = shift;
+    local *OLD_OUT; local *OLD_ERR;
+    open(OLD_OUT, '>&STDOUT') or die;
+    open(STDOUT, '>/dev/null') or die;
+    open(OLD_ERR, '>&STDERR') or die;
+    open(STDERR, '>/dev/null') or die;
+    {
+	# Turn off warnings that the module might produce.
+	local $SIG{__DIE__} = local $SIG{__WARN__} = sub {};
+
+	# But if we're C-c'd while loading it then print what it was.
+	local $SIG{INT} = sub {
+	    open(STDERR, '>&OLD_ERR')
+	      && print STDERR "interrupted while loading $m\n";
+	    # But if reopening stderr fails, no cure!
+	    exit(1);
+	};
+
+	eval "require $m";
+    }
+    open(STDOUT, '>&OLD_OUT') or die;
+    open(STDERR, '>&OLD_ERR') or die;
+
+    if ($@) {
+	return [ 0, $@ ];
+    }
+    my $varname = $m . '::VERSION';
+    no strict 'refs';
+    my $version = $$varname;
+    if (defined $version) {
+	$version =~ s/, set by \S+\s*$//;
+    }
+    return [ 1, $version ];
+}
+
+# Wrapper for load_module() that runs it in a separate process.
+#
+# Arguments:
+#   module name
+#
+sub load_module_fork( $ ) {
+    my $m = shift;
+    my $pid = open(CHILD, '-|');
+    if (not defined $pid) {
+	die "cannot fork: $!";
+    }
+    elsif ($pid) {
+	# Parent.
+	local $/ = undef;
+	my $got = <CHILD>;
+	close CHILD or warn "cannot close pipe from child: $!";
+	$got =~ s/^([^,]+),// or die "bad result from child: $got\n";
+	my $ok = $1;
+	my $more = $got;
+	undef $more if $more eq '';
+	return [ $ok, $more ];
+    }
+    else {
+	# Child.
+	my ($ok, $more) = @{load_module($m)};
+	$more = '' if not defined $more;
+	print "$ok,$more"
+	  or die "cannot write to pipe to parent: $!";
+	exit(0);
+    }
+}
+
+# Replacement for load_module() that doesn't load the whole thing but
+# uses magic from ExtUtils::MM_Unix to guess the version.
+#
+# Arguments:
+#   module *filename*
+#
+# Requires ExtUtils::MakeMaker and ExtUtils::MM_Unix to have been
+# 'used' beforehand.
+#
+sub parse_version( $ ) {
+    my $f = shift;
+    my $got = ExtUtils::MM_Unix->parse_version($f);
+    undef $got if defined $got and $got eq 'undef';
+    return [ 1, $got ];
+}
+
+
+sub all_mods( $ ) {
+    my $sub = shift;
+    require File::Find;
+    my $dummy = $File::Find::name; # quell warning
+    my (%seen_file, %seen_mod);
+    foreach my $i (@INC) {
+	my $l = length $i;
+	my $wanted = sub {
+	    return if not /\.pm$/;
+	    for ($File::Find::name) {
+		return if $seen_file{$_}++;
+		if (index($_, "$i/") != 0) {
+		    die "$_ doesn't begin with $i/";
+		}
+		my $modname = substr($_, $l + 1);
+		for ($modname) {
+		    s!/!::!g;
+		    s/\.pm$// or die;
+		    return if ($seen_mod{$_}++);
+		}
+		$sub->($modname, $_);
+	    }
+	};
+	File::Find::find($wanted, $i);
+    }
+}
+

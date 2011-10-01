@@ -1,0 +1,104 @@
+#!/usr/bin/perl
+
+# configure llvm-gcc-bc as cc (and optionally as ld). Makefile.SH does the rest
+use strict;
+use warnings;
+use Config;
+
+my ($output, $input, $verbose);
+
+for ( my $i = 0; $i < @ARGV; $i++ ) {
+  # these are refs because it was useful to change them while I was writing this script
+  # it might not be necessary
+  $output = \$ARGV[$i+1] if $ARGV[$i] eq '-o';
+  $input = \$ARGV[$i] if -f $ARGV[$i]; # FIXME incredibly stupid
+  $verbose++ if $ARGV[$i] eq '-v';
+}
+
+# guess the output file from the input file when compiling
+unless ( $output ) {
+  if ( $input and $$input=~ /\.c$/ ) {
+    my $x = $$input;
+    $x =~ s/\.c$/.o/;
+    $output = \$x; #\$ARGV[-2];
+  }
+}
+
+# detect building an exe or shared lib
+my $argline = join " ",@ARGV;
+my $dlext = $Config{dlext};
+# heuristic for figuring out whether we are linking or compiling
+
+# When creating a possibly shared library we need to pull some voodoo
+if (!$output) {
+  # I don't think this actually happens
+  do_exec("llvm-gcc", @ARGV);
+} elsif ($output and $$output=~/\.$dlext$/ and $$input !~ /\.c$/) {
+  # ( $$output =~ /(?:^|\/)\w+(?:\.bundle)?$/ and $$input !~ /\.c$/ ) # MacOSX specific
+  my @pure_ld = grep { /^(?:-l\w+|-o)$/ || $_ eq $$output || -f $_ } @ARGV;
+
+  # llvm-ld -native breaks when delegating to the real linker because by
+  # default it doesn't generate position independant code.
+		
+  # llvm-ld -native-cbe should solve this, but this works:
+
+  # link the library as llvm bytecode first
+  # this writes to $$output, but we overwrite it later with the native shared object
+  do_system(
+            "llvm-ld",
+            "-r", # link as a library, undefined symbols allowed
+            "-O5",
+            @pure_ld,
+           );
+
+  # use the LLVM static compiler to emit assembly code from the linked llvm bytecode
+  do_system(qw(llc -o linked.s -relocation-model=pic -f ), $$output);
+
+  # zap the bytecode
+  unlink($$output);
+  $$input = "linked.s";
+
+  # use gcc to compile the linked.s assembly file into the real $$output file as originally intended
+  # the grep is to shut the iphone sdk linker up when it can't find liblto for
+  # some reason. the normal linker just ignores the bitcode files
+  do_exec("gcc", grep { !/\.o$/ } @ARGV);
+
+} elsif ($output and $argline =~ / -o / and $$input !~ /\.c$/) {  # we're linking an executable
+  do_exec(
+          "llvm-ld",
+          "-native", # generate native code
+          "-disable-internalize", # keep the symbols referencable by code that is later dynamically loaded (e.g. by DynaLoader)
+          ( $$output =~ /perl$/ ? ("-O5") : () ), # if linking perl or miniperl optimize more aggressively than the default
+          # all the non llvm-ld options must be escaped
+          map { /^(?:-l\w+|-o)$/ || $_ eq $$output || -f $_ ? $_ : "-Xlinker=$_" } @ARGV
+          # Note that -L is not passed to llvm-ld, there is no llvm bytecode to be found there
+          # at the moment and it's not handled correctly
+         );
+} elsif ( $output and $$output =~ /\.o$/ ) {
+  # when compiling an object file -emit-llvm instead of emitting native code
+  do_exec("llvm-gcc", "-emit-llvm", @ARGV);
+} else {
+  # in Configure when compiling directly from .c to exe
+  do_exec_filtered("llvm-gcc", @ARGV);
+}
+
+sub do_exec {
+  warn "exec: @_" if $verbose;
+  exec(@_);
+}
+
+# filter out "Warning: type of symbol"
+sub do_exec_filtered {
+  warn "exec: @_" if $verbose;
+  my $cmd = join " ",@_;
+  $cmd .= " 2>&1" if $^O ne 'MSWin32';
+  my $result = `$cmd`;
+  $result =~ s/.*Warning: type of symbol.*\n//;
+  print $result;
+  return $? >> 8;
+}
+
+sub do_system {
+  warn "system: @_" if $verbose;
+  system(@_) && exit $?;
+}
