@@ -1,13 +1,13 @@
 #!/bin/bash
 # Test a module with all available perls
-# TODO: 5.8.0 5.8.2 5.8.7 5.8.8d 5.8.9 5.9.5 5.11.0
+# TODO: 5.8.0 5.8.2 5.8.6 5.8.7 5.8.8d 5.8.9 5.9.5
 # long "5.6.2 5.8.8-nt 5.8.9d 5.10.0 5.10.1 5.10.1d-nt 5.10.1d 5.11.2d 5.11.2d-nt 5.11.3d 5.11.3d-nt 5.13.4 13.4-nt 5.13.5 5.13.7"
 # short: "5.6.2 5.8.8-nt 5.8.9d 5.10.1 5.10.1d-nt 5.11.2d 5.11.2d-nt" 5.11.5d 
 # 5.8.8-nt 5.8.9d: -ldb missing, Win23CORE missing 
 # 5.15.1-nt seems to be broken
-# 5.15.0-m 5.15.1d-nt 5.15.1d-nt-opt 5.15.2-nt 5.15.2d-nt 
+# 5.15.0-m 5.15.1d-nt 5.15.1d-nt-opt 5.15.2-nt 5.15.2d-nt 5.15.1d-m
 # /usr/local/bin/perl5*
-export perlall=${perlall:-"5.14.2-nt 5.12.3-m 5.10.0-m 5.8.9 5.8.9d 5.10.1d-nt 5.14.0d-m 5.14.1-nt 5.14.1d-nt 5.14.2d 5.15.1d-m 5.15.3-nt 5.15.3d-nt 5.6.2d"}
+export perlall=${perlall:-"5.14.2-nt 5.12.3-m 5.10.0-m 5.8.9 5.8.9d 5.10.1d-nt 5.14.0d-m 5.14.1-nt 5.14.1d-nt 5.14.2d 5.15.3-nt 5.15.3d-nt 5.6.2d"}
 platform=$(uname | tr A-Z a-z)
 
 base=$(basename $0)
