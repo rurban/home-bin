@@ -6,6 +6,7 @@
 # 5.8.8-nt 5.8.9d: -ldb missing, Win23CORE missing 
 # 5.15.1-nt seems to be broken
 # 5.15.0-m 5.15.1d-nt 5.15.1d-nt-opt 5.15.2-nt 5.15.2d-nt 
+# /usr/local/bin/perl5*
 export perlall=${perlall:-"5.14.2-nt 5.12.3-m 5.10.0-m 5.8.9 5.8.9d 5.10.1d-nt 5.14.0d-m 5.14.1-nt 5.14.1d-nt 5.14.2d 5.15.1d-m 5.15.3-nt 5.15.3d-nt 5.6.2d"}
 platform=$(uname | tr A-Z a-z)
 
@@ -51,26 +52,27 @@ do
     perl$p -S cpan $@
   else
     log=$logpre-$p
-    test -f $log && rm $log
+    test -f $log && mv $log $log.bak
     test -d t/.svn && svn info t | grep Revision >> $log
     test -d .git && git log --oneline HEAD^1..HEAD >> $log
     test -f Build && (./Build realclean; $sudo rm -rf blib _Build Build)
-    __print1 perl$p Makefile.PL
-    $sudo make -s clean
+    test -d blib && $sudo make -s clean
     echo "alias p=perl$p" > ~/.alias-perl
     export p
+    __print1 perl$p Makefile.PL
     if perl$p Makefile.PL
     then
       ( 
 	  DL_NOWARN=1
           if [ "$base" = "perlall-make" ]
           then
+	      log=log.make-$platform-$p
               __print1 make -s 
               make -s >/dev/null
               __print1 perl$p $@
               (perl$p $@  | tee -a $log 2>&1) && ok="$ok $p"
           fi
-          if [ "$base" = "perlall-maketest" ]
+          if [ "$base" = "perlall-maketest" -o "$base" = "perlall-maketest-m"]
           then
               __print1 make test TEST_VERBOSE=1
               make && (make test TEST_VERBOSE=1 | tee -a $log 2>&1)
@@ -80,7 +82,7 @@ do
               __print1 "make test && sudo make install"
               make &&  (make test TEST_VERBOSE=1 | tee -a $log 2>&1) && sudo make install
           fi
-	  if [ -d ".svn" -a $(basename $PWD) = "B-C" ]
+	  if [ "$base" = "perlall-maketest-m" -a -d ".svn" -a $(basename $PWD) = "B-C" ]
 	  then
               __print1 "perl$p -Mblib t/modules.t t/top100 -log"
 	      perl$p -Mblib t/modules.t t/top100 -log >> $log
