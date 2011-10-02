@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+use Cwd;
+use File::Path;
+my $pwd = cwd();
+chdir "$ENV{HOME}/.cpan/build";
+# keep only the latest dir
+opendir(my $dh, ".") or die;
+while (my $d = readdir $dh) {
+  next unless -d $d;
+  next if $d =~ /^\./;
+  my $t = (stat($d))[9];
+  my $b = substr($d,0,-7);
+  next if substr($d,-7,1) ne '-';
+  for (grep !/\.yml/, <$b*>) {
+    next if $_ eq $d;
+    my $t1 = (stat($_))[9];
+    if (-d $_ and $t1 < $t) {
+      print "rm -rf \"$_*\"\n";
+      rmtree($_);
+      unlink("$_.yml");
+    } elsif (-d $_) {
+      $t = $t1;
+    }
+  }
+}
+closedir $dh;
+chdir $pwd;
