@@ -3,9 +3,9 @@ params=""
 for f in "$@"; do
   n="$f"
   case "$f" in
-  */*)  n=$(echo "$f"|/bin/sed -e's,/,::,g')
+  */*)  n=$(echo "$f"|sed -e's,/,::,g')
 	;;
-  *-*)  n=$(echo "$f"|/bin/sed -e's,-,::,g')
+  *-*)  n=$(echo "$f"|sed -e's,\([^ ]\)-,\1::,g')
 	;;
   esac
   params="$params $n"
