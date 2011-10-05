@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+
+use strict;
+use vars;
+
+sub usage {
+  print "ERROR: Missing argument\n";
+  print "diffsize [-n][-q] dir1 dir2\n";
+  print "  print filenames with different filesizes in both directories\n";
+  print "  -n \tignore not existing files in 2nd directory\n";
+  print "  -q \tprint only filenames\n";
+  exit;
+}
+
+sub size {
+  my @s = stat(shift) or return -1;
+  return $s[7];
+}
+
+my $opt_n = 0;
+my $opt_q = 0;
+my $dir1 = shift || usage;
+if ($dir1 eq '-n') {
+  $opt_n = 1;
+  $dir1 = shift || usage;
+}
+if ($dir1 eq '-q') {
+  $opt_q = 1;
+  $dir1 = shift || usage;
+  if ($dir1 eq '-n') {
+    $opt_n = 1;
+    $dir1 = shift || usage;
+  }
+}
+my $dir2 = shift || usage;
+
+opendir(D1, $dir1) or die "cannot open $dir1: $!\n";
+chdir $dir1;
+
+while (my $f1 = readdir(D1)) {
+  next if -d $f1;
+  my $f2 = "$dir2/$f1";
+  my $s1 = size($f1);
+  my $s2 = size($f2);
+  if ($s2 < 0) {
+    if (! $opt_n) {
+      if ($opt_q) {
+	print $f1, "\n";
+      } else {
+	print "$f1\t$s1\t$s2\t$f2 does not exist\n";
+      }
+    }
+  } elsif ($s2 != $s1) {
+    if ($opt_q) {
+      print $f1, "\n";
+    } else {
+      print "$f1\t$s1\t$s2\t$f2\n";
+    }
+  }
+}
+closedir D1;
+closedir D2;

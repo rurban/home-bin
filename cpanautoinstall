@@ -1,0 +1,3 @@
+#!/usr/bin/perl
+use CPAN;
+CPAN::Shell->install(CPAN::Shell->r)

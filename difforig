@@ -1,0 +1,29 @@
+#!/bin/sh
+b=
+if [ "$1" = "-b" ]; then b="b"; shift; fi
+echo "difforig $@"
+echo ""
+#/usr/bin/date +"%Y-%m-%d %H:%M:%S  <rurban@x-ray.at>"
+#echo ""
+if [ "$#" -gt 1 -o -f "$1" ] # multiple args or a file: just these
+then
+    for FILE in "$@"
+    do
+	ORIG="$FILE.orig"
+	echo "$FILE" 1>&2
+	echo "diff -u$b $ORIG $FILE"
+	/usr/bin/diff -u$b $ORIG $FILE
+    done
+else 
+    if [ "$#" -eq 0 ]
+    then	APATH="."  # no arg: recursively all origs
+    else	APATH="$1" # or one arg: recursively all origs
+    fi
+    /usr/bin/find "$APATH" -name '*.orig' -print | /usr/bin/sort | while read FILE
+    do
+	NEW="`dirname $FILE`/`basename $FILE .orig`"
+	echo "$NEW" 1>&2
+	echo "diff -u$b $ORIG $FILE"
+	/usr/bin/diff -u$b $FILE $NEW
+    done
+fi

@@ -1,0 +1,3 @@
+#!/bin/sh
+# du sorted by size
+perl -e '%h=map{/.\s/;7x(ord$&&10)+$`,$_}`du -h @ARGV`;print@h{sort%h}' $*

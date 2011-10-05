@@ -1,0 +1,27 @@
+#!/bin/bash
+
+function filediff {
+        BASE="`basename $FILE | sed -e 's,\(.bak\|.bk\|~\)$,,'`"
+        NEW="`dirname $FILE`/$BASE"
+        if [ "$FILE" = "$NEW" ]; then FILE=$(ls -t $FILE{~,.bak,.bak,.orig} 2>/dev/null | head -n1); fi
+	if [ -e "$FILE" -a -e "$NEW" ]; then
+	    echo "$NEW" 1>&2
+	    echo "diff -bu $FILE $NEW"
+	    /usr/bin/diff -bu $FILE $NEW
+	fi
+}
+
+if [ "$#" -gt 1 -o -f "$1" ] # multiple args or a file: just these
+then
+    for FILE in "$@"; do filediff; done
+else
+    if [ "$#" -eq 0 ]
+    then        APATH="."  # no arg: recursively all origs
+    else        APATH="$1" # or one arg: recursively all origs
+  fi
+  /usr/bin/find $APATH \( -name '*~' -o -name '*.ba?k' \) -print | sort | \
+  while read FILE
+  do
+	filediff
+  done
+fi
