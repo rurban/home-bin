@@ -32,7 +32,8 @@ if [ -n "$1" -a "$base" != "perlall-do" -a "$base" != "perlall-make" -a "$base" 
 then 
     perlall="$*"
 fi
-sudo=sudo
+sudo=
+#sudo
 if [ -w blib ]; then unset sudo; sudo=; fi
 if [ -d blib ]; then $sudo rm -rf blib; fi
 #test -f lib/B/Asmdata.pm && rm -f lib/B/Asmdata.pm
@@ -80,8 +81,8 @@ do
           fi
           if [ "$base" = "perlall-makeinstall" ]
           then
-              __print1 "make test && sudo make install"
-              make &&  (make test TEST_VERBOSE=1 | tee -a $log 2>&1) && sudo make install
+              __print1 "make test && $sudo make install"
+              make &&  (make test TEST_VERBOSE=1 | tee -a $log 2>&1) && $sudo make install
           fi
 	  if [ "$base" = "perlall-maketest-m" -a -d ".svn" -a $(basename $PWD) = "B-C" ]
 	  then
@@ -111,5 +112,6 @@ then
 fi
 
 rm $base.lock 2>/dev/null
+test -f lib/B/C.pm && rm -f rename && rmdir POSIX
 test -f ./store_rpt && ./store_rpt
 exit 0
