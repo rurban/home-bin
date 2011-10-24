@@ -9,8 +9,10 @@ cat ~/.alias-perl
 echo p -S cpan YAML DBI DBD::SQLite CPAN::SQLite
 p -S cpan -j ~/.cpan/CPAN/nosqlite.pm YAML DBI DBD::SQLite CPAN::SQLite
 
-echo p -S cpan Bundle::CPANReporter2 B::Flags Opcodes '$(cat ~/Perl/B-C/t/top100)'
-p -S cpan Bundle::CPANReporter2 B::Flags Opcodes $(cat ~/Perl/B-C/t/top100)
+echo p -S cpan Params::Util Bundle::CPANReporter2 B::Flags Opcodes \
+  Math::Round Params::Classify '$(cat ~/Perl/B-C/t/top100)'
+p -S cpan Params::Util Bundle::CPANReporter2 B::Flags Opcodes \
+  Math::Round Params::Classify $(cat ~/Perl/B-C/t/top100)
 
 echo "more? (or Ctrl-C)"
 read more
