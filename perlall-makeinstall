@@ -8,7 +8,11 @@
 # 5.15.0-m 5.15.1d-nt 5.15.1d-nt-opt 5.15.2-nt 5.15.2d-nt 5.15.1d-m
 # /usr/local/bin/perl5*
 #export perlall=${perlall:-"5.14.2-nt 5.12.3-m 5.10.0-m 5.8.8-nt 5.8.9 5.15.4d-nt 5.6.2d-nt 5.8.4d-nt 5.8.5d-nt 5.8.9d 5.10.1d-nt 5.14.0d-m 5.14.1-nt 5.14.1d-nt 5.14.2d 5.15.3-nt"}
-export perlall=${perlall:-"5.12.4 5.15.4d-nt 5.15.4d"}
+if [ -z "$perlall" ]; then
+  perlall=`ls /usr/local/bin/perl5*|grep -v '*~'|sed 's,/usr/local/bin/perl,,'`
+else
+  export perlall=${perlall:-"5.14.1-nt 5.14.1d-nt 5.14.2-nt 5.14.2d-nt 5.12.4 5.15.4d-nt 5.15.4d"}
+fi
 platform=$(uname | tr A-Z a-z)
 
 base=$(basename $0)
@@ -83,7 +87,7 @@ do
           if [ "$base" = "perlall-makeinstall" ]
           then
               __print1 "make test && $sudo make install"
-              make &&  (make test TEST_VERBOSE=1 | tee -a $log 2>&1) && $sudo make install
+              make &&  (make test TEST_VERBOSE=1 | tee -a $log 2>&1) && sudo make install
           fi
 	  if [ "$base" = "perlall-maketest-m" -a -d ".git" -a $(basename $PWD) = "B-C" ]
 	  then

@@ -1,4 +1,5 @@
 #! /bin/sh
 
 /usr/bin/mv -f TAGS TAGS~ 2>/dev/null
-/usr/bin/find . \( -iname \*.pl -o -iname \*.pm  -o -iname \*.cgi \) -exec etags -a --lang=perl \{\} \;
+/usr/bin/find . \( -iname \*.pl -o -iname \*.pm  -o -iname \*.cgi \) \
+    -exec etags -a --language=perl \{\} \;
