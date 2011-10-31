@@ -1,24 +1,25 @@
-#!/bin/sh
+#!/bin/bash
 # needs proper alias p to our new perl
 if [ -n "$1" ]; then
     echo "alias p=$1" > ~/.alias-perl
+    p=$1
 fi
-source ~/.alias-perl
+. ~/.alias-perl
 cat ~/.alias-perl
 
-echo p -S cpan YAML DBI DBD::SQLite CPAN::SQLite
-p -S cpan -j ~/.cpan/CPAN/nosqlite.pm YAML DBI DBD::SQLite CPAN::SQLite
+echo $p -S cpan YAML DBI DBD::SQLite CPAN::SQLite
+$p -S cpan -j ~/.cpan/CPAN/nosqlite.pm YAML DBI DBD::SQLite CPAN::SQLite
 
-echo p -S cpan Params::Util Bundle::CPANReporter2 B::Flags Opcodes \
+echo $p -S cpan Params::Util Bundle::CPANReporter2 B::Flags Opcodes \
   Math::Round Params::Classify '$(cat ~/Perl/B-C/t/top100)'
-p -S cpan Params::Util Bundle::CPANReporter2 B::Flags Opcodes \
+$p -S cpan Params::Util Bundle::CPANReporter2 B::Flags Opcodes \
   Math::Round Params::Classify $(cat ~/Perl/B-C/t/top100)
 
 echo "more? (or Ctrl-C)"
 read more
 # Class::MethodMaker rm SIGNATURE
-p -S cpan Bundle::CygwinVendor YAML::XS DBIx::Class 
+$p -S cpan Bundle::CygwinVendor YAML::XS DBIx::Class 
 # missing Kensho deps
-p -S cpan SQL::Abstract Module::Find Mouse MouseX::Types
-perl -lne '/=item L<(.+?)[\|>]/ and print $1' /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm \
-    | xargs $1 -S cpan
+$p -S cpan SQL::Abstract Module::Find Mouse MouseX::Types
+perl -lne '/=item L<(.+?)[\|>]/ and print $1' /usr/local/lib/perl5/site_perl/5.15.4/Task/Kensho.pm \
+    | xargs $p -S cpan
