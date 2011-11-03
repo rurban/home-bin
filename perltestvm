@@ -64,8 +64,8 @@ else
 fi
 
 which="debian debian64 centos5 centos54 freebsd7 solaris10 openbsd"
-ssh="perl514"
-which="ssh $which"
+ssh="perl514 openbsd49 freebsd7 freebsd8"
+which="$ssh $which"
 
 # define my various vm's by name and special overrides
 n=0
@@ -208,6 +208,9 @@ vm_perls[$n]="5.8.6"
 vm_vmx[$n]='C:\Virtual Machines\openbsd-3.8\OpenBSD.vmx'
 vm_vmx_s[$n]=openbsd-3.8
 #vm_conf[$n]="--parrot_is_shared --ldflags='-shared'"
+let n+=1
+
+vm_name[$n]=openbsd49
 let n+=1
 
 #vm_name[$n]=fedora10

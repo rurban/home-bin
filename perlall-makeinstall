@@ -1,20 +1,16 @@
 #!/bin/bash
-# Test a module with all available perls
-# TODO: 5.8.0 5.8.2 5.8.6 5.8.7 5.8.8d 5.8.9 5.9.5
-# long "5.6.2 5.8.8-nt 5.8.9d 5.10.0 5.10.1 5.10.1d-nt 5.10.1d 5.11.2d 5.11.2d-nt 5.11.3d 5.11.3d-nt 5.13.4 13.4-nt 5.13.5 5.13.7"
-# short: "5.6.2 5.8.8-nt 5.8.9d 5.10.1 5.10.1d-nt 5.11.2d 5.11.2d-nt" 5.11.5d 
-# 5.8.8-nt 5.8.9d: -ldb missing, Win23CORE missing 
-# 5.15.1-nt seems to be broken
-# 5.15.0-m 5.15.1d-nt 5.15.1d-nt-opt 5.15.2-nt 5.15.2d-nt 5.15.1d-m
-# /usr/local/bin/perl5*
-#export perlall=${perlall:-"5.14.2-nt 5.12.3-m 5.10.0-m 5.8.8-nt 5.8.9 5.15.4d-nt 5.6.2d-nt 5.8.4d-nt 5.8.5d-nt 5.8.9d 5.10.1d-nt 5.14.0d-m 5.14.1-nt 5.14.1d-nt 5.14.2d 5.15.3-nt"}
+# Test a module in cwd with all available local perls. 
+# symlink to system perls with our versioned naming scheme
+# d   DEBUGGING
+# -nt non-threaded
+# -m  multi
 if [ -z "$perlall" ]; then
-  perlall=`ls /usr/local/bin/perl5*|grep -v '*~'|sed 's,/usr/local/bin/perl,,'`
-else
-  export perlall=${perlall:-"5.14.1-nt 5.14.1d-nt 5.14.2-nt 5.14.2d-nt 5.12.4 5.15.4d-nt 5.15.4d"}
+  perlall=$(ls /usr/local/bin/perl5*|sed 's,/usr/local/bin/perl,,')
+#else
+#  export perlall=${perlall:-"5.14.2-nt 5.12.3-m 5.10.1-m 5.8.8-nt 5.8.9 5.15.4d-nt 5.6.2d-nt 5.8.4d-nt 5.8.5d-nt 5.8.9d 5.10.1d-nt 5.14.0d-m 5.14.1-nt 5.14.1d-nt 5.14.2d 5.15.3-nt"}
 fi
-platform=$(uname | tr A-Z a-z)
-
+platform=$(perl -MDevel::Platform::Info -e'$d=Devel::Platform::Info->new->get_info();$s=$d->{oslabel}.$d->{osvers};$s=~s/\s//g;print lc($s)')
+if [ -z $platform ]; then platform=$(uname | tr A-Z a-z); fi
 base=$(basename $0)
 
 if [ -f $base.lock ]; then
@@ -89,6 +85,7 @@ do
               __print1 "make test && $sudo make install"
               make &&  (make test TEST_VERBOSE=1 | tee -a $log 2>&1) && sudo make install
           fi
+	  # B::C only: test with modules
 	  if [ "$base" = "perlall-maketest-m" -a -d ".git" -a $(basename $PWD) = "B-C" ]
 	  then
               __print1 "perl$p -Mblib t/modules.t t/top100 -log"
@@ -117,6 +114,6 @@ then
 fi
 
 rm $base.lock 2>/dev/null
-test -f lib/B/C.pm && (rm -f rename && rmdir POSIX 2>/dev/null )
+test -f lib/B/C.pm && (rm -f rename && rmdir POSIX 2>/dev/null)
 test -f ./store_rpt && ./store_rpt
 exit 0
