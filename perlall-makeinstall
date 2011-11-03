@@ -33,8 +33,7 @@ if [ -n "$1" -a "$base" != "perlall-do" -a "$base" != "perlall-make" -a "$base" 
 then 
     perlall="$*"
 fi
-sudo=
-#sudo
+sudo=sudo
 if [ -w blib ]; then unset sudo; sudo=; fi
 if [ -d blib ]; then $sudo rm -rf blib; fi
 #test -f lib/B/Asmdata.pm && rm -f lib/B/Asmdata.pm
