@@ -73,6 +73,12 @@ n=0
 vm_name[$n]=perl514
 let n+=1
 
+vm_name[$n]=win
+let n+=1
+
+vm_name[$n]=openbsd49
+let n+=1
+
 # freebsd7 has gcc-4.2 and llvm-2.3
 vm_name[$n]=freebsd7
 vm_vmx[$n]='C:\Virtual Machines\freebsd-7.0-i386\freebsd-7.0-i386.vmx'
@@ -208,9 +214,6 @@ vm_perls[$n]="5.8.6"
 vm_vmx[$n]='C:\Virtual Machines\openbsd-3.8\OpenBSD.vmx'
 vm_vmx_s[$n]=openbsd-3.8
 #vm_conf[$n]="--parrot_is_shared --ldflags='-shared'"
-let n+=1
-
-vm_name[$n]=openbsd49
 let n+=1
 
 #vm_name[$n]=fedora10
