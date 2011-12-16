@@ -64,13 +64,19 @@ else
 fi
 
 which="debian debian64 centos5 centos54 freebsd7 solaris10 openbsd"
-ssh="perl514"
-which="ssh $which"
+ssh="perl514 openbsd49 freebsd7 freebsd8"
+which="$ssh $which"
 
 # define my various vm's by name and special overrides
 n=0
 
 vm_name[$n]=perl514
+let n+=1
+
+vm_name[$n]=win
+let n+=1
+
+vm_name[$n]=openbsd49
 let n+=1
 
 # freebsd7 has gcc-4.2 and llvm-2.3
