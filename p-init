@@ -6,7 +6,9 @@ if [ -n "$1" ]; then
 fi
 . ~/.alias-perl
 cat ~/.alias-perl
-jpan="$p -S cpan -j ~/.cpan/CPAN/nosqlite.pm"
+
+exp=~/.cpan/CPAN/nosqlite.pm
+jpan="$p -S cpan -j $exp"
 cpan="$p -S cpan"
 
 # DBI still broken, Do not use CPAN::SQLite with asan
