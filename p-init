@@ -6,22 +6,36 @@ if [ -n "$1" ]; then
 fi
 . ~/.alias-perl
 cat ~/.alias-perl
-# if all the deps would be correct it would be a better world
-echo $p -S cpan YAML DBI DBD::SQLite File::Which CPAN::SQLite
-$p -S cpan -j ~/.cpan/CPAN/nosqlite.pm YAML DBI DBD::SQLite File::Which CPAN::SQLite
+jpan="$p -S cpan -j ~/.cpan/CPAN/nosqlite.pm"
+cpan="$p -S cpan"
 
-# now we should have a working CPAN::SQLite and faster startup
-echo $p -S cpan Params::Util Bundle::CPANReporter2 B::Flags Opcodes \
-  Math::Round Params::Classify '$(cat ~/Perl/B-C/t/top100)'
-$p -S cpan Params::Util Bundle::CPANReporter2 
-$p -S cpan B::Flags Opcodes Math::Round Params::Classify $(cat ~/Perl/B-C/t/top100)
+# DBI still broken, Do not use CPAN::SQLite with asan
+if [[ $p =~ -asan ]]; then
+  echo asan special
+  cpan="$jpan"
+else
+  echo bootstrapping CPAN::SQLite
+  # if all the deps would be correct it would be a better world
+  echo $jpan YAML DBI DBD::SQLite File::Which CPAN::SQLite
+  $jpan YAML DBI DBD::SQLite File::Which CPAN::SQLite
+  # now we should have a working CPAN::SQLite and faster startup
+fi
+
+echo bootstrapping Bundle::CPANReporter2
+echo $cpan Params::Util Bundle::CPANReporter2 
+$cpan Params::Util Bundle::CPANReporter2 
+
+echo $cpan B::Flags Opcodes Math::Round Params::Classify '$(cat ~/Perl/B-C/t/top100)'
+$cpan B::Flags Opcodes Math::Round Params::Classify $(cat ~/Perl/B-C/t/top100)
 
 echo "more? (or Ctrl-C)"
 read more
 # Class::MethodMaker rm SIGNATURE
-$p -S cpan Bundle::CygwinVendor YAML::XS DBIx::Class 
+$cpan Bundle::CygwinVendor YAML::XS DBIx::Class 
 # missing Kensho deps
-$p -S cpan SQL::Abstract Module::Find Mouse MouseX::Types
+$cpan SQL::Abstract Module::Find Mouse MouseX::Types
 # Task::Kensho assumes there is only one archlib per perl, do it manually
 perl -lne '/=item L<(.+?)[\|>]/ and print $1' /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm \
-    | xargs $p -S cpan
+    | xargs $cpan
+
+fi
