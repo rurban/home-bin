@@ -18,7 +18,7 @@ function docmd {
 
 # DBI still broken, Do not use CPAN::SQLite with asan
 if [[ $p =~ -asan ]]; then
-  echo asan special
+  echo '# asan special'
   cpan="$jpan"
 else
   echo bootstrapping CPAN::SQLite
@@ -27,14 +27,14 @@ else
   # now we should have a working CPAN::SQLite and faster startup
 fi
 
-echo bootstrapping Bundle::CPANReporter2
+echo '# bootstrapping Bundle::CPANReporter2'
 docmd $cpan Params::Util Bundle::CPANReporter2
 
 docmd $cpan B::Flags Opcodes Math::Round Params::Classify
 echo $cpan '$(cat ~/Perl/B-C/t/top100)'
 $cpan $(cat ~/Perl/B-C/t/top100)
 
-echo "more? (or Ctrl-C)"
+echo "# more? (or Ctrl-C)"
 read more
 # Class::MethodMaker rm SIGNATURE
 docmd $cpan Inline Bundle::CygwinVendor YAML::XS DBIx::Class
