@@ -21,7 +21,7 @@ if [[ $p =~ -asan ]]; then
   echo '# asan special'
   cpan="$jpan"
 else
-  echo bootstrapping CPAN::SQLite
+  echo '# bootstrapping CPAN::SQLite'
   # if all the deps would be correct it would be a better world
   docmd $jpan YAML DBI DBD::SQLite File::Which CPAN::SQLite
   # now we should have a working CPAN::SQLite and faster startup
