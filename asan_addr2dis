@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+#
+# Symbolize AddressSanitizer stacktraces via objdump -Sd.
+# Expands the 0 frame srcline and for subsequent frames only the function name.
+#
+# OPTIONS:
+#   -l prints all lines, without -l only the expanded stacktraces.
+#   -f<n> disassembles the first n stackframes, not only the first. typical are: -f2 or -f3
+#     -f0 disassembles all stackframes
+# Copyright 2011 Reini Urban, BSD License
+use Getopt::Std;
+our ($opt_l, $opt_f);
+getopts('lf:');
+
+LINE:
+  while (<>) {
+    /^==\d+== ERROR: AddressSanitizer/ && do {print; next};
+    /^(READ|WRITE) of size / && do {print; next};
+    # /usr/local/lib/perl5/5.15.5/x86_64-linux-debug-asan@a7d2e0/CORE/libperl.so+0x28f319
+    # => objdump -Sd --start-address=$2 $1|head
+    if (my ($frame, $absaddr, $path, $reladdr) = /^ +#(\d+) +(0x[0-9a-f]+) +\((.*)\+(0x[0-9a-f]+)\)/) {
+      next unless $absaddr and $path;
+      my $dump = `objdump -Sd --start-address=$reladdr $path|head -n40`;
+      my ($ok,$name,$addr);
+      my $fullframe = $frame == 0;
+      $fullframe++ if defined($opt_f) and ($opt_f == 0 or $opt_f > $frame);
+    DUMP:
+      for (split /\n/,$dump) { # look at the first dump lines
+	next DUMP unless $_;
+	if (/^[0-9a-f]+\s+<(.+)\+(0x[0-9a-f]+)>:/) {
+	  ($name,$addr) = ($1,$2);
+	  $ok++;
+	  print "\n" if $fullframe;
+	  print "    #$frame  " if $fullframe;
+	}
+	if ($ok) {
+	  if ($fullframe) { #print until 2nd asm
+	    print "$_\n";
+	  } else { #print only function name
+	    print "    #$frame  $name+$addr\n";
+	    last DUMP;
+	  }
+	}
+	if (/^\s{0,3}[0-9a-f]+:\s+[0-9a-f][0-9a-f] /) { #skip further asm
+	  last DUMP if $ok; $ok = 0;
+	}
+      }
+      next;
+    }
+    /^0x[0-9a-f]+ is located/ && do {print; next};
+    /^allocated by thread/    && do {print; next};
+    
+    print if $opt_l;
+}
