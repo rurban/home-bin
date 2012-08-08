@@ -16,16 +16,17 @@ function docmd {
   $*
 }
 
-# DBI still broken, Do not use CPAN::SQLite with asan
-if [[ $p =~ -asan ]]; then
-  echo '# asan special'
-  cpan="$jpan"
-else
+# DBI is now fixed with ~/.cpan/prefs/TIMB.DBI.yml
+# RURBAN/patches/DBI-1.622-rt75614-use-after-free-global-destruction.patch
+#if [[ $p =~ -asan ]]; then
+#  echo '# asan special'
+#  cpan="$jpan"
+#else
   echo '# bootstrapping CPAN::SQLite'
   # if all the deps would be correct it would be a better world
   docmd $jpan YAML DBI DBD::SQLite File::Which CPAN::SQLite
   # now we should have a working CPAN::SQLite and faster startup
-fi
+#fi
 
 echo '# bootstrapping Bundle::CPANReporter2'
 docmd $cpan Params::Util Bundle::CPANReporter2
