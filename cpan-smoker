@@ -1,0 +1,3 @@
+#!/usr/bin/perl
+use CPAN::Reporter::Smoker;
+start;

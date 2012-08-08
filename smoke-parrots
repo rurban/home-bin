@@ -1,0 +1,6 @@
+#!/bin/sh
+for branch in master whiteknight/io_cleanup1 threads native_pbc
+do
+    fbranch="`echo $branch|sed -e's,/,_,'`"
+    ~/bin/smoke-parrot $branch &2>1 >~/parrot/smoked.$fbranch.log
+done
