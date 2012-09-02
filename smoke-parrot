@@ -3,7 +3,7 @@ cd /usr/src/parrot/parrot-git || exit
 
 branch=${1:-master}
 # stash changes if dirty or detached head
-if git symbolic-ref -q HEAD
+if git symbolic-ref -q HEAD >/dev/null
 then
   if git status|grep " Changes " 2>/dev/null
   then
@@ -11,12 +11,12 @@ then
   fi
 fi
 fbranch=smoked."`echo $branch|sed -e's,/,_,'`"
-git fetch origin $branch
-git checkout -b $branch
+git fetch origin
+git checkout $branch
 git clean -dxf || git clean -d -x
 git reset --hard
 git pull origin $branch
-git reset --hard
+git reset --hard origin/$branch
 oldrev="`cat ../$fbranch`"
 newrev="`git rev-parse $branch`"
 if [ x$oldrev = x$newrev ]
