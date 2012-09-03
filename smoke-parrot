@@ -1,9 +1,10 @@
 #!/bin/sh
 cd /usr/src/parrot/parrot-git || exit
+lock=/usr/src/parrot/smoke.lock
 
-trap "rm smoke.lock; exit 255" SIGINT SIGTERM
-if [ -e smoke.lock ]; then
-  echo "Another smoker still running, smoke.lock exists"
+trap "rm $lock; exit 255" SIGINT SIGTERM
+if [ -e $lock ]; then
+  echo "Another smoker still running, $lock exists"
   exit
 fi
 
@@ -29,10 +30,10 @@ if [ x$oldrev = x$newrev ]
 then
   echo "no changes for $branch $newrev"
 else
-  echo $newrev >smoke.lock
+  echo $newrev >$lock
   perl Configure.pl --optimize
   make
   make smolder_test
   git rev-parse $branch && echo $newrev >../$fbranch
-  rm smoke.lock
+  rm $lock
 fi
