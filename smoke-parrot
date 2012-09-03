@@ -1,6 +1,12 @@
 #!/bin/sh
 cd /usr/src/parrot/parrot-git || exit
 
+trap "rm smoke.lock; exit 255" SIGINT SIGTERM
+if [ -e smoke.lock ]; then
+  echo "Another smoker still running, smoke.lock exists"
+  exit
+fi
+
 branch=${1:-master}
 # stash changes if dirty or detached head
 if git symbolic-ref -q HEAD >/dev/null
