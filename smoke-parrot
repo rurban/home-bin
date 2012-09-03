@@ -23,8 +23,10 @@ if [ x$oldrev = x$newrev ]
 then
   echo "no changes for $branch $newrev"
 else
+  echo $newrev >smoke.lock
   perl Configure.pl --optimize
   make
   make smolder_test
   git rev-parse $branch && echo $newrev >../$fbranch
+  rm smoke.lock
 fi
