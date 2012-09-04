@@ -1,0 +1,45 @@
+#!/bin/sh
+cd /usr/src/parrot/parrot-git || exit
+
+lock=/usr/src/parrot/smoke.lock
+
+trap "rm $lock; exit 255" INT TERM
+if [ -e $lock ]; then
+  echo "Another smoker still running, $lock exists"
+  exit
+fi
+    
+branch=${1:-master}
+# stash changes if dirty or detached head
+if git symbolic-ref -q HEAD >/dev/null
+then
+  if git status|grep " Changes " 2>/dev/null
+  then
+    git stash save "smoke `date +%F` `git name-rev --name-only HEAD`"
+  fi
+fi
+fbranch=smoked."`echo $branch|sed -e's,/,_,'`"
+git fetch origin
+git checkout $branch
+git clean -dxf || git clean -d -x
+git reset --hard
+git pull origin $branch
+git reset --hard origin/$branch
+oldrev="`cat ../$fbranch`"
+newrev="`git rev-parse $branch`"
+
+function win() {
+  cmd /c "call perl514 & $*"
+}
+
+if [ x$oldrev = x$newrev ]
+then
+  echo "no changes for $branch $newrev"
+else
+  echo $newrev >$lock
+  win perl Configure.pl --optimize
+  win make
+  win make smolder_test
+  git rev-parse $branch && echo $newrev >../$fbranch
+  rm $lock
+fi
