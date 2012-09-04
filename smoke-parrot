@@ -2,7 +2,7 @@
 cd /usr/src/parrot/parrot-git || exit
 lock=/usr/src/parrot/smoke.lock
 
-trap "rm $lock; exit 255" SIGINT SIGTERM
+trap "rm $lock; exit 255" INT TERM
 if [ -e $lock ]; then
   echo "Another smoker still running, $lock exists"
   exit
