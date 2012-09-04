@@ -1,8 +1,8 @@
 #!/bin/sh
-#nqp-p6
+# nqp-p6
+# relocatable-gh800 \
 for b in master threads native_pbc \
-	 gh832_has_mt relocatable-gh800 \
-	 rurban/strip-install_config-gh824 \
+         rurban/strip-install_config-gh824 \
          whiteknight/rm_pasm2
 do
     fbranch="`echo $b|sed -e's,/,_,'`"
