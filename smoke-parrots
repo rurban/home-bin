@@ -1,10 +1,10 @@
 #!/bin/sh
 #nqp-p6
-for branch in master threads native_pbc \
-	      gh832_has_mt relocatable-gh800 \
-	      rurban/strip-install_config-gh824 \
-              whiteknight/rm_pasm2
+for b in master threads native_pbc \
+	 gh832_has_mt relocatable-gh800 \
+	 rurban/strip-install_config-gh824 \
+         whiteknight/rm_pasm2
 do
-    fbranch="`echo $branch|sed -e's,/,_,'`"
-    ~/bin/smoke-parrot $branch >/usr/src/parrot/smoked.$fbranch.log &2>1
+    fbranch="`echo $b|sed -e's,/,_,'`"
+    ~/bin/smoke-parrot $b >/usr/src/parrot/smoked.$fbranch.log 2>&1
 done
