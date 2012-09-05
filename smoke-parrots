@@ -3,7 +3,7 @@
 # relocatable-gh800 \
 branches="master threads native_pbc \
          rurban/strip-install_config-gh824 \
-         whiteknight/rm_pasm2"
+         coke/rm_pasm whiteknight/rm_pasm2"
 # at last smoke-me branches
 cd /usr/src/parrot/parrot-git
 
