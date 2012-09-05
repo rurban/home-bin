@@ -1,0 +1,21 @@
+#!/bin/bash
+# nqp-p6 \
+# relocatable-gh800 \
+branches="master threads native_pbc \
+          rurban/strip-install_config-gh824 \
+          whiteknight/rm_pasm2"
+# at last smoke-me branches
+cd /usr/src/parrot/parrot-git
+for s in `git branch -r | grep smoke-me/`
+do
+    s="`echo $s|sed 's,^origin/,,g'`"
+    if [ -n $s -a "${s:0:4}" != "bdw/" ]; then
+	branches="$branches $s"
+    fi
+done
+
+for b in $branches
+do
+    fbranch="`echo $branch|sed -e's,/,_,g'`"
+    ~/bin/smoke-parrot-win $branch >/usr/src/parrot/smoked.$fbranch.log 2>&1
+done
