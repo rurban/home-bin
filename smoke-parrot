@@ -9,6 +9,7 @@ if [ -e $lock ]; then
 fi
 
 branch=${1:-master}
+shift
 # stash changes if dirty or detached head
 if git symbolic-ref -q HEAD >/dev/null
 then
@@ -19,19 +20,19 @@ then
 fi
 fbranch=smoked."`echo $branch|sed -e's,/,_,'`"
 git fetch origin
-git checkout $branch
-git clean -dxf || git clean -d -x
-git reset --hard
-git pull origin $branch
-git reset --hard origin/$branch
 oldrev="`cat ../$fbranch`"
-newrev="`git rev-parse $branch`"
+newrev="`git rev-parse origin/$branch`"
 if [ x$oldrev = x$newrev ]
 then
   echo "no changes for $branch $newrev"
 else
+  git checkout $branch
+  git clean -dxf || git clean -d -x
+  git reset --hard
+  git pull origin $branch
+  git reset --hard origin/$branch
   echo $newrev >$lock
-  perl Configure.pl --optimize
+  perl Configure.pl --optimize $@
   make
   make smolder_test
   git rev-parse $branch && echo $newrev >../$fbranch

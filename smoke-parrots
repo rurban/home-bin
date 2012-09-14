@@ -1,11 +1,21 @@
 #!/bin/bash
-# nqp-p6
-# relocatable-gh800 \
-branches="master threads native_pbc \
+# TODO: nqp-p6
+#       relocatable-gh800 \
+branches="master threads native_pbc native_pbc2 \
          rurban/strip-install_config-gh824 \
          coke/rm_pasm whiteknight/rm_pasm2"
 # at last smoke-me branches
 cd /usr/src/parrot/parrot-git
+
+# stash changes if dirty or detached head
+if git symbolic-ref -q HEAD >/dev/null
+then
+  if git status|grep " Changes " 2>/dev/null
+  then
+      stashname="smoke `date +%F` `git name-rev --name-only HEAD`"
+      git stash save $stashname
+  fi
+fi
 
 for s in `git branch -r | grep smoke-me/`
 do
@@ -14,9 +24,14 @@ do
 	branches="$branches $s"
     fi
 done
+curbranch=`git name-rev --name-only HEAD`
 
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"
     ~/bin/smoke-parrot $b >/usr/src/parrot/smoked.$fbranch.log 2>&1
 done
+
+git co $curbranch
+git reset --hard
+test -n $stashname && git stash pop $stashname
