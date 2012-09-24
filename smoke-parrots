@@ -1,11 +1,11 @@
 #!/bin/bash
-# TODO: nqp-p6
-#       relocatable-gh800 \
 branches="master threads native_pbc native_pbc2 \
-         rurban/strip-install_config-gh824 \
-         coke/rm_pasm whiteknight/rm_pasm2"
+         rurban/mime-base64-utf8-gh813+gh814 rurban/broken-sprintf-uplus-gh832 rurban/va_arg_print_n \
+         coke/rm_pasm whiteknight/rm_pasm2 relocatable-gh800 \
+         nqp-p6 rurban/clang++-gh844 rurban/clang-warnings-gh843 rurban/pmc2c-unused-gh836"
+
 # at last smoke-me branches
-cd /usr/src/parrot/parrot-git
+cd /usr/src/parrot/smoke
 
 # stash changes if dirty or detached head
 if git symbolic-ref -q HEAD >/dev/null

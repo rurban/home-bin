@@ -1,5 +1,5 @@
 #!/bin/sh
-cd /usr/src/parrot/parrot-git || exit
+cd /usr/src/parrot/smoke || exit
 lock=/usr/src/parrot/smoke.lock
 
 trap "rm $lock; exit 255" INT TERM
@@ -29,12 +29,12 @@ else
   git checkout $branch
   git clean -dxf || git clean -d -x
   git reset --hard
-  git pull origin $branch
+  git pull origin $branch </dev/null
   git reset --hard origin/$branch
   echo $newrev >$lock
-  perl Configure.pl --optimize $@
-  make
-  make smolder_test
+  perl Configure.pl --optimize $@ >/dev/null
+  make -s
+  make -s smolder_test
   git rev-parse $branch && echo $newrev >../$fbranch
   rm $lock
 fi

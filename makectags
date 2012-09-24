@@ -1,4 +1,4 @@
 #! /bin/sh
 
 /usr/bin/mv -f TAGS TAGS~ 2>/dev/null
-/usr/bin/find  \( -iname \*.c -o -iname \*.h \) -exec etags -a --language-force=c \{\} \;
+/usr/bin/find  \( -iname \*.c -o -iname \*.h \) -exec etags -a --language=c \{\} \;
