@@ -27,7 +27,7 @@ curbranch=`git name-rev --name-only HEAD`
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"
-    /bin/sh ~/bin/smoke-parrot $b >>/usr/src/parrot/smoked.$fbranch.log 2>>&1
+    /bin/sh ~/bin/smoke-parrot $b >>/usr/src/parrot/smoked.$fbranch.log 2>&1
 done
 
 git co $curbranch

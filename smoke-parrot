@@ -9,7 +9,7 @@ if [ -e $lock ]; then
 fi
 
 branch=${1:-master}
-shift
+test -n "$1" && shift
 # stash changes if dirty or detached head
 if git symbolic-ref -q HEAD >/dev/null
 then
