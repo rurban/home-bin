@@ -29,12 +29,11 @@ else
   git checkout $branch
   git clean -dxf || git clean -d -x
   git reset --hard
-  git pull origin $branch </dev/null
+  git pull -q origin $branch </dev/null >/dev/null 2>/dev/null
   git reset --hard origin/$branch
   echo $newrev >$lock
-  perl Configure.pl --optimize $@ >/dev/null
+  perl Configure.pl --optimize --cc="ccache g++" --link="ccache g++" --ld="ccache g++" $@ >/dev/null
   make -s
-  make -s smolder_test
-  git rev-parse $branch && echo $newrev >../$fbranch
+  make -s smolder_test && git rev-parse $branch && echo $newrev >../$fbranch
   rm $lock
 fi

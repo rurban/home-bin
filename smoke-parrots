@@ -1,8 +1,6 @@
 #!/bin/bash
-branches="master threads native_pbc native_pbc2 \
-         rurban/mime-base64-utf8-gh813+gh814 rurban/broken-sprintf-uplus-gh832 rurban/va_arg_print_n \
-         coke/rm_pasm whiteknight/rm_pasm2 relocatable-gh800 \
-         nqp-p6 rurban/clang++-gh844 rurban/clang-warnings-gh843 rurban/pmc2c-unused-gh836"
+branches="master threads native_pbc native_pbc2 coke/rm_pasm whiteknight/rm_pasm2 relocatable-gh800 nqp-p6"
+# plus all rurban and smoke-me
 
 # at last smoke-me branches
 cd /usr/src/parrot/smoke
@@ -17,7 +15,7 @@ then
   fi
 fi
 
-for s in `git branch -r | grep smoke-me/`
+for s in `git branch -r | grep '(rurban|smoke-me)/'`
 do
     s="`echo $s|sed 's,^origin/,,g'`"
     if [ -n $s -a "${s:0:4}" != "bdw/" ]; then
@@ -29,7 +27,7 @@ curbranch=`git name-rev --name-only HEAD`
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"
-    ~/bin/smoke-parrot $b >/usr/src/parrot/smoked.$fbranch.log 2>&1
+    /bin/sh ~/bin/smoke-parrot $b >>/usr/src/parrot/smoked.$fbranch.log 2>>&1
 done
 
 git co $curbranch
