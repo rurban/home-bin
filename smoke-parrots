@@ -1,9 +1,20 @@
 #!/bin/bash
-branches="master threads native_pbc native_pbc2 coke/rm_pasm whiteknight/rm_pasm2 relocatable-gh800 nqp-p6"
-# plus all rurban and smoke-me
+# Usage: smoke-parrots, smoke-parrots-win, smoke-parrots-msvc
 
-# at last smoke-me branches
-cd /usr/src/parrot/smoke
+branches="master threads native_pbc native_pbc2 coke/rm_pasm whiteknight/rm_pasm2 \
+          relocatable-gh800 nqp-p6"
+# plus all rurban/* and smoke-me/* remote branches
+plus_egrep_branches="(rurban|smoke-me)/"
+
+parrotdir=/usr/src/parrot
+smokedir=$parrotdir/smoke
+
+cd $smokedir || exit 1
+base=$(basename $0)
+if [ "$base" != "smoke-parrots" ]; then
+    # see smoke-parrot-win for customizations
+    cmd=`echo $base|sed 's,smoke-parrots-,smoke-parrot-,'`
+fi
 
 # stash changes if dirty or detached head
 if git symbolic-ref -q HEAD >/dev/null
@@ -15,10 +26,10 @@ then
   fi
 fi
 
-for s in `git branch -r | grep '(rurban|smoke-me)/'`
+for s in `git branch -r | egrep '$plus_egrep_branches'`
 do
     s="`echo $s|sed 's,^origin/,,g'`"
-    if [ -n $s -a "${s:0:4}" != "bdw/" ]; then
+    if [ -n $s ]; then
 	branches="$branches $s"
     fi
 done
@@ -27,7 +38,7 @@ curbranch=`git name-rev --name-only HEAD`
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"
-    /bin/sh ~/bin/smoke-parrot $b >>/usr/src/parrot/smoked.$fbranch.log 2>&1
+    $cmd $b >> $parrotdir/smoked.$fbranch.log 2>&1
 done
 
 git co $curbranch

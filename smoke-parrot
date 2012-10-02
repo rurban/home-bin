@@ -1,6 +1,76 @@
-#!/bin/sh
-cd /usr/src/parrot/smoke || exit
-lock=/usr/src/parrot/smoke.lock
+#!/bin/bash
+# Usage: smoke-parrot [ branchname ] [config-opts...]
+# or set a config via sym or hardlink
+
+# Some system dependant configs
+parrotdir=/usr/src/parrot
+smokedir=$parrotdir/smoke
+opts=
+perl=perl
+make=make
+# setup mingw paths, or msvc paths via global batch file
+winbat=perl514
+
+# set special env by basename
+# e.g. ln smoke-parrot smoke-parrot-win; => cmd=win)
+# This calls cmd for every remote command, perl Configure, and make
+cmd=
+
+if echo `hostname` | grep win 2>/dev/null; then
+  # already on windows, via cygwin crontab
+  function win_init() {
+    opts=
+  }
+  function ppc_init() {
+    opts=--without-pcre
+  }
+  function msvc_init() {
+    opts=
+    make=nmake
+  }
+  function win() {
+    cmd /c "call $winbat & $*"
+  }
+  function msvc() {
+    cmd /c "call msvc & $*"
+  }
+else
+  # ssh remote commands
+  remotehost=win
+  function win_init() {
+    opts=
+    `sudo virsh resume win`
+  }
+  function msvc_init() {
+    make=nmake
+    opts=
+    `sudo virsh resume win`
+  }
+  function win() {
+    ssh $remotehost 'cd $smokedir & cmd /c "call $winbat & $*"'
+  }
+  function msvc() {
+    ssh $remotehost 'cd $smokedir & cmd /c "call msvc & $*"'
+  }
+fi
+# end of configs
+
+base=$(basename $0)
+if [ "$base" != "smoke-parrot" ]; then
+    cmd=`echo $base|sed 's,smoke-parrot-,,'`
+    ${cmd}_${init}
+else
+  if test -n "`ccache g++ --version`"; then
+    compiler="ccache g++"
+  elif test -n "`ccache cc --version`"; then
+    compiler="ccache cc"
+  elif test -n "`g++ --version`"; then
+    compiler="g++"
+  fi
+fi
+
+cd $smokedir || exit 1
+lock=$parrotdir/smoke.lock
 
 trap "rm $lock; exit 255" INT TERM
 if [ -e $lock ]; then
@@ -26,14 +96,20 @@ if [ x$oldrev = x$newrev ]
 then
   echo "no changes for $branch $newrev"
 else
+  perl -S cpan TAP::Harness::Archive
   git checkout $branch
+  # older git, e.g. solaris
   git clean -dxf || git clean -d -x
   git reset --hard
   git pull -q origin $branch </dev/null >/dev/null 2>/dev/null
   git reset --hard origin/$branch
   echo $newrev >$lock
-  perl Configure.pl --optimize --cc="ccache g++" --link="ccache g++" --ld="ccache g++" $@ >/dev/null
-  make -s
-  make -s smolder_test && git rev-parse $branch && echo $newrev >../$fbranch
+  if test -n "$compiler"; then
+    $cmd perl Configure.pl --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@ >/dev/null
+  else
+    $cmd perl Configure.pl --optimize $opts $@ >/dev/null
+  fi
+  $cmd make -s
+  $cmd make -s smolder_test && git rev-parse $branch && echo $newrev >../$fbranch
   rm $lock
 fi
