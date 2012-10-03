@@ -150,5 +150,5 @@ else
   $cmd $make -s
   $cmd $make -s smolder_test
   git rev-parse $branch && echo $newrev > $parrotdir/$fbranch
-  rm $lock
 fi
+rm $lock
