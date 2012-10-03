@@ -42,7 +42,7 @@ echo $cmd $branches
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"
-    $cmd $b >> $parrotdir/smoked.$fbranch.log 2>&1
+    $cmd $b 2>&1 | tee -a $parrotdir/smoked.$fbranch.log
 done
 
 git co $curbranch
