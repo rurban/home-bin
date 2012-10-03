@@ -21,11 +21,15 @@ cmd=
 if echo `hostname` | grep win 2>/dev/null; then
   # already on windows, via cygwin crontab
   function win_init() {
+    smokedir=/usr/src/parrot/win32
+    make=gmake
     opts=
   }
   function msvc_init() {
-    opts=
+    smokedir=/usr/src/parrot/msvc
+    suffix=.msvc
     make=nmake
+    opts=
   }
   function win() {
     cmd /c "call $winbat & $*"
