@@ -11,9 +11,12 @@ smokedir=$parrotdir/smoke
 
 cd $smokedir || exit 1
 base=$(basename $0)
+cmd=smoke-parrot
 if [ "$base" != "smoke-parrots" ]; then
     # see smoke-parrot-win for customizations
-    cmd=`echo $base|sed 's,smoke-parrots-,smoke-parrot-,'`
+    trycmd=`echo $base|sed 's,smoke-parrots-,smoke-parrot-,'`
+    dir=$(dirname $0)
+    test -e $dir/$trycmd && cmd=$trycmd
 fi
 
 # stash changes if dirty or detached head
@@ -26,7 +29,7 @@ then
   fi
 fi
 
-for s in `git branch -r | egrep '$plus_egrep_branches'`
+for s in `git branch -r | egrep "$plus_egrep_branches"`
 do
     s="`echo $s|sed 's,^origin/,,g'`"
     if [ -n $s ]; then
@@ -35,6 +38,7 @@ do
 done
 curbranch=`git name-rev --name-only HEAD`
 
+echo $cmd $branches
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"

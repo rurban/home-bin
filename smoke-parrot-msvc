@@ -39,6 +39,10 @@ else
   function ppc_init() {
     opts=--without-pcre
   }
+  function solaris_init() {
+    opts='--ldflags="-L/usr/lib -L/usr/ccs/lib -L/lib -L/usr/gnu/lib/amd64" --linkflags="-L/usr/lib -L/usr/ccs/li -L/lib -L/usr/gnu/lib/"'
+    make=gmake
+  }
   function win_init() {
     # for git checkouts we need either a remote git or a local mountpoint
     parrotdir=/mnt/win/cygwin/usr/src/parrot
@@ -67,6 +71,12 @@ else
     opts=
     sudo virsh resume win
     /mnt/mnt-win.sh
+  }
+  function solaris() {
+    $*
+  }
+  function ppc() {
+    $*
   }
   function cygwin() {
     ssh $remotehost "cd $smokedir; $*"
@@ -113,6 +123,7 @@ then
     git stash save "smoke `date +%F` `git name-rev --name-only HEAD`"
   fi
 fi
+
 smoked=smoked$suffix
 fbranch=$smoked."`echo $branch|sed -e's,/,_,'`"
 git fetch origin
@@ -130,6 +141,7 @@ else
   git pull -q origin $branch </dev/null >/dev/null 2>/dev/null
   git reset --hard origin/$branch
   echo $newrev >$lock
+  echo $base $cmd $branch
   if test -n "$compiler"; then
     $cmd $perl Configure.pl --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@ >/dev/null
   else
