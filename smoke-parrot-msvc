@@ -3,8 +3,10 @@
 # or set a config via sym or hardlink
 
 # Some system dependant configs
+suffix=
 parrotdir=/usr/src/parrot
 smokedir=$parrotdir/smoke
+lsmokedir=$smokedir
 opts=
 perl=perl
 make=make
@@ -21,9 +23,6 @@ if echo `hostname` | grep win 2>/dev/null; then
   function win_init() {
     opts=
   }
-  function ppc_init() {
-    opts=--without-pcre
-  }
   function msvc_init() {
     opts=
     make=nmake
@@ -37,20 +36,46 @@ if echo `hostname` | grep win 2>/dev/null; then
 else
   # ssh remote commands
   remotehost=win
+  function ppc_init() {
+    opts=--without-pcre
+  }
   function win_init() {
+    # for git checkouts we need either a remote git or a local mountpoint
+    parrotdir=/mnt/win/cygwin/usr/src/parrot
+    lsmokedir=$parrotdir/win32
+    smokedir=/usr/src/parrot/win32
+    suffix=.win32
     opts=
-    `sudo virsh resume win`
+    sudo virsh resume win
+    /mnt/mnt-win.sh
   }
   function msvc_init() {
+    parrotdir=/mnt/win/cygwin/usr/src/parrot
+    lsmokedir=$parrotdir/msvc
+    smokedir=/usr/src/parrot/msvc
+    suffix=.msvc
     make=nmake
     opts=
-    `sudo virsh resume win`
+    sudo virsh resume win
+    /mnt/mnt-win.sh
+  }
+  function cygwin_init() {
+    parrotdir=/mnt/win/cygwin/usr/src/parrot
+    lsmokedir=$parrotdir/parrot-git
+    smokedir=/usr/src/parrot/parrot-git
+    suffix=.cygwin
+    opts=
+    sudo virsh resume win
+    /mnt/mnt-win.sh
+  }
+  function cygwin() {
+    ssh $remotehost "cd $smokedir; $*"
   }
   function win() {
-    ssh $remotehost 'cd $smokedir & cmd /c "call $winbat & $*"'
+    ssh $remotehost "cd $smokedir; cmd /c \"call $winbat & $*\""
   }
   function msvc() {
-    ssh $remotehost 'cd $smokedir & cmd /c "call msvc & $*"'
+    ssh $remotehost "cd $smokedir; cmd /c \"call msvc & $*\""
   }
 fi
 # end of configs
@@ -58,7 +83,7 @@ fi
 base=$(basename $0)
 if [ "$base" != "smoke-parrot" ]; then
     cmd=`echo $base|sed 's,smoke-parrot-,,'`
-    ${cmd}_${init}
+    ${cmd}_init
 else
   if test -n "`ccache g++ --version`"; then
     compiler="ccache g++"
@@ -69,8 +94,8 @@ else
   fi
 fi
 
-cd $smokedir || exit 1
-lock=$parrotdir/smoke.lock
+cd $lsmokedir || exit 1
+lock=$parrotdir/smoke$suffix.lock
 
 trap "rm $lock; exit 255" INT TERM
 if [ -e $lock ]; then
@@ -88,9 +113,10 @@ then
     git stash save "smoke `date +%F` `git name-rev --name-only HEAD`"
   fi
 fi
-fbranch=smoked."`echo $branch|sed -e's,/,_,'`"
+smoked=smoked$suffix
+fbranch=$smoked."`echo $branch|sed -e's,/,_,'`"
 git fetch origin
-oldrev="`cat ../$fbranch`"
+oldrev="`cat $parrotdir/$fbranch`"
 newrev="`git rev-parse origin/$branch`"
 if [ x$oldrev = x$newrev ]
 then
@@ -105,11 +131,12 @@ else
   git reset --hard origin/$branch
   echo $newrev >$lock
   if test -n "$compiler"; then
-    $cmd perl Configure.pl --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@ >/dev/null
+    $cmd $perl Configure.pl --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@ >/dev/null
   else
-    $cmd perl Configure.pl --optimize $opts $@ >/dev/null
+    $cmd $perl Configure.pl --optimize $opts $@ >/dev/null
   fi
-  $cmd make -s
-  $cmd make -s smolder_test && git rev-parse $branch && echo $newrev >../$fbranch
+  $cmd $make -s
+  $cmd $make -s smolder_test
+  git rev-parse $branch && echo $newrev > $parrotdir/$fbranch
   rm $lock
 fi
