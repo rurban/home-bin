@@ -22,7 +22,13 @@ if echo `hostname` | grep win 2>/dev/null; then
   # already on windows, via cygwin crontab
   function win_init() {
     smokedir=/usr/src/parrot/win32
+    suffix=.mingw
     make=gmake
+    opts=
+  }
+  function cygwin_init() {
+    smokedir=/usr/src/parrot/parrot-git
+    suffix=.cygwin
     opts=
   }
   function msvc_init() {
@@ -44,6 +50,7 @@ else
     opts=--without-pcre
   }
   function solaris_init() {
+    compiler=
     opts='--ldflags="-L/usr/lib -L/usr/ccs/lib -L/lib -L/usr/gnu/lib/amd64" --linkflags="-L/usr/lib -L/usr/ccs/li -L/lib -L/usr/gnu/lib/"'
     make=gmake
   }
@@ -68,23 +75,23 @@ else
     /mnt/mnt-win.sh
   }
   function cygwin_init() {
-    parrotdir=/mnt/win/cygwin/usr/src/parrot
-    lsmokedir=$parrotdir/parrot-git
+    #parrotdir=/mnt/win/cygwin/usr/src/parrot
+    #lsmokedir=$parrotdir/parrot-git
     smokedir=/usr/src/parrot/parrot-git
     suffix=.cygwin
     opts=
-    sudo virsh resume win
-    /mnt/mnt-win.sh
+    #sudo virsh resume win
+    #/mnt/mnt-win.sh
   }
   function solaris() {
-    $*
+    "$*"
   }
   function ppc() {
-    $*
+    "$*"
   }
-  function cygwin() {
-    ssh $remotehost "cd $smokedir; $*"
-  }
+  #function cygwin() {
+  #  ssh $remotehost "cd $smokedir; $*"
+  #}
   function win() {
     ssh $remotehost "cd $smokedir; cmd /c \"call $winbat & $*\""
   }
@@ -99,11 +106,11 @@ if [ "$base" != "smoke-parrot" ]; then
     cmd=`echo $base|sed 's,smoke-parrot-,,'`
     ${cmd}_init
 else
-  if test -n "`ccache g++ --version`"; then
+  if `ccache g++ --version 2>&1 >/dev/null`; then
     compiler="ccache g++"
-  elif test -n "`ccache cc --version`"; then
+  elif `ccache cc --version 2>&1 >/dev/null`; then
     compiler="ccache cc"
-  elif test -n "`g++ --version`"; then
+  elif `g++ --version 2>&1 >/dev/null`; then
     compiler="g++"
   fi
 fi
@@ -153,6 +160,6 @@ else
   fi
   $cmd $make -s
   $cmd $make -s smolder_test
-  git rev-parse $branch && echo $newrev > $parrotdir/$fbranch
+  git rev-parse $branch && test -f Makefile && echo $newrev > $parrotdir/$fbranch
+  rm $lock 2>/dev/null
 fi
-rm $lock
