@@ -4,8 +4,9 @@
 # d   DEBUGGING
 # -nt non-threaded
 # -m  multi
+
 if [ -z "$perlall" ]; then
-  perlall=$(ls /usr/local/bin/perl5*|sed 's,/usr/local/bin/perl,,')
+  perlall=$(perlall -m list|sed 's,/usr/local/bin/perl,,')
 #else
 #  export perlall=${perlall:-"5.14.2-nt 5.12.3-m 5.10.1-m 5.8.8-nt 5.8.9 5.15.4d-nt 5.6.2d-nt 5.8.4d-nt 5.8.5d-nt 5.8.9d 5.10.1d-nt 5.14.0d-m 5.14.1-nt 5.14.1d-nt 5.14.2d 5.15.3-nt"}
 fi
