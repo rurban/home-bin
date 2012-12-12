@@ -4,7 +4,9 @@
 branches="master threads native_pbc native_pbc2 coke/rm_pasm whiteknight/rm_pasm2 \
           relocatable-gh800 nqp-p6"
 # plus all rurban/* and smoke-me/* remote branches
-plus_egrep_branches="(rurban|smoke-me)/"
+#plus_egrep_branches="(rurban|smoke-me)/"
+# all branches
+plus_egrep_branches="origin/"
 
 parrotdir=/usr/src/parrot
 smokedir=$parrotdir/smoke
@@ -29,7 +31,7 @@ then
   fi
 fi
 
-for s in `git branch -r | egrep "$plus_egrep_branches"`
+for s in `git branch -r | egrep "$plus_egrep_branches" | egrep -v '(->|HEAD)'`
 do
     s="`echo $s|sed 's,^origin/,,g'`"
     if [ -n $s ]; then

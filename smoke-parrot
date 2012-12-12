@@ -154,9 +154,9 @@ else
   echo $newrev >$lock
   echo $base $cmd $branch
   if test -n "$compiler"; then
-    $cmd $perl Configure.pl --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@ >/dev/null
+    $cmd $perl Configure.pl --cage --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@ >/dev/null
   else
-    $cmd $perl Configure.pl --optimize $opts $@ >/dev/null
+    $cmd $perl Configure.pl --cage --optimize $opts $@ >/dev/null
   fi
   $cmd $make -s
   $cmd $make -s smolder_test
