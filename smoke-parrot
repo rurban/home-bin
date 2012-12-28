@@ -6,6 +6,9 @@
 suffix=
 parrotdir=/usr/src/parrot
 smokedir=$parrotdir/smoke
+if [ ! -d $smokedir ]; then
+  smokedir=$parrotdir/master
+fi
 lsmokedir=$smokedir
 opts=
 perl=perl

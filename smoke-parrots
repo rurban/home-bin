@@ -1,7 +1,7 @@
 #!/bin/bash
 # Usage: smoke-parrots, smoke-parrots-win, smoke-parrots-msvc
 
-branches="master threads native_pbc native_pbc2 coke/rm_pasm whiteknight/rm_pasm2 \
+branches="master native_pbc2 coke/rm_pasm whiteknight/rm_pasm2 \
           relocatable-gh800 nqp-p6"
 # plus all rurban/* and smoke-me/* remote branches
 #plus_egrep_branches="(rurban|smoke-me)/"
@@ -10,6 +10,9 @@ plus_egrep_branches="origin/"
 
 parrotdir=/usr/src/parrot
 smokedir=$parrotdir/smoke
+if [ ! -d $smokedir ]; then
+  smokedir=$parrotdir/master
+fi  
 
 cd $smokedir || exit 1
 base=$(basename $0)
