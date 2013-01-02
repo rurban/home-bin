@@ -46,8 +46,20 @@ echo $cmd $branches
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"
-    $cmd $b 2>&1 >> $parrotdir/smoked.$fbranch.log
-    grep -v "no changes for " $parrotdir/smoked.$fbranch.log
+    log=$parrotdir/smoked.$fbranch.log
+    tmplog=$parrotdir/smoked.$fbranch.log.tmp
+    $cmd $b 2>&1 >> $tmplog
+    if grep "no changes for " $tmplog >/dev/null; then
+	rm $tmplog
+    else
+	if [ -s $tmplog ]; then
+            mv $log $log.bak
+            mv $tmplog $log
+	    echo $log
+            head $log
+            tail -n 15 $log
+	fi
+    fi
 done
 
 git co -q $curbranch
