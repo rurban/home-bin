@@ -9,6 +9,9 @@ plus_egrep_branches="origin/"
 
 parrotdir=/usr/src/parrot
 smokedir=$parrotdir/smoke
+if [ ! -d $smokedir ]; then
+  smokedir=$parrotdir/master
+fi  
 
 cd $smokedir || exit 1
 base=$(basename $0)
