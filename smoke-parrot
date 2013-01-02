@@ -144,22 +144,25 @@ if [ x$oldrev = x$newrev ]
 then
   echo "no changes for $branch $newrev"
 else
-  perl -S cpan TAP::Harness::Archive
+  perl -S cpan TAP::Harness::Archive >/dev/null 2>/dev/null
   git checkout $branch
   # older git, e.g. solaris
-  git clean -dxf || git clean -d -x
+  git clean -q -dxf || git clean -d -x
   git reset --hard
   git pull -q origin $branch </dev/null >/dev/null 2>/dev/null
   git reset --hard origin/$branch
   echo $newrev >$lock
   echo $base $cmd $branch
   if test -n "$compiler"; then
+    echo $cmd $perl Configure.pl --cage --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@
     $cmd $perl Configure.pl --cage --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@ >/dev/null
   else
+    echo $cmd $perl Configure.pl --cage --optimize $opts $@
     $cmd $perl Configure.pl --cage --optimize $opts $@ >/dev/null
   fi
   $cmd $make -s
   $cmd $make -s smolder_test
+  echo branch $branch
   git rev-parse $branch && test -f Makefile && echo $newrev > $parrotdir/$fbranch
   rm $lock 2>/dev/null
 fi

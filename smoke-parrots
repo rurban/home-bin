@@ -1,8 +1,7 @@
 #!/bin/bash
 # Usage: smoke-parrots, smoke-parrots-win, smoke-parrots-msvc
 
-branches="master threads native_pbc native_pbc2 coke/rm_pasm whiteknight/rm_pasm2 \
-          relocatable-gh800 nqp-p6"
+branches="master"
 # plus all rurban/* and smoke-me/* remote branches
 #plus_egrep_branches="(rurban|smoke-me)/"
 # all branches
@@ -44,9 +43,10 @@ echo $cmd $branches
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"
-    $cmd $b 2>&1 | tee -a $parrotdir/smoked.$fbranch.log
+    $cmd $b 2>&1 >> $parrotdir/smoked.$fbranch.log
+    grep -v "no changes for " $parrotdir/smoked.$fbranch.log
 done
 
-git co $curbranch
-git reset --hard
-test -n $stashname && git stash pop $stashname
+git co -q $curbranch
+git reset -q --hard
+test -n $stashname && git stash -q pop $stashname
