@@ -42,7 +42,6 @@ do
 done
 curbranch=`git name-rev --name-only HEAD`
 
-echo $cmd $branches
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"
@@ -55,6 +54,7 @@ do
 	if [ -s $tmplog ]; then
             mv $log $log.bak
             mv $tmplog $log
+	    echo $cmd $b 
 	    echo $log
             head $log
             tail -n 15 $log
@@ -64,4 +64,5 @@ done
 
 git co -q $curbranch
 git reset -q --hard
-test -n $stashname && git stash -q pop $stashname
+test -n $stashname && git stash pop $stashname 2>/dev/null >/dev/null
+

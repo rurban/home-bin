@@ -50,7 +50,8 @@ else
   # ssh remote commands
   remotehost=win
   function ppc_init() {
-    opts=--without-pcre
+    #opts=--without-pcre
+    opts=
   }
   function solaris_init() {
     compiler=
@@ -157,11 +158,11 @@ else
   echo $newrev >$lock
   echo $base $cmd $branch
   if test -n "$compiler"; then
-    echo $cmd $perl Configure.pl --cage --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@
-    $cmd $perl Configure.pl --cage --optimize --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@ >/dev/null
+    echo $cmd $perl Configure.pl --debugging --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@
+    $cmd $perl Configure.pl --debugging --cc="$compiler" --link="$compiler" --ld="$compiler" $opts $@ >/dev/null
   else
-    echo $cmd $perl Configure.pl --cage --optimize $opts $@
-    $cmd $perl Configure.pl --cage --optimize $opts $@ >/dev/null
+    echo $cmd $perl Configure.pl --debugging $opts $@
+    $cmd $perl Configure.pl --debugging $opts $@ >/dev/null
   fi
   $cmd $make -s
   $cmd $make -s smolder_test
