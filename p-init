@@ -32,8 +32,11 @@ echo '# bootstrapping Bundle::CPANReporter2'
 docmd $cpan Params::Util Bundle::CPANReporter2
 
 docmd $cpan B::Flags Opcodes Math::Round Params::Classify
-echo $cpan '$(cat ~/Perl/B-C/t/top100)'
-$cpan $(cat ~/Perl/B-C/t/top100)
+if test -f ~/Perl/B-C/t/top100; then
+  echo $cpan '$(cat ~/Perl/B-C/t/top100)'
+  $cpan $(cat ~/Perl/B-C/t/top100)
+endif
+docmd $cpan Task::Cpanel::Core
 
 echo "# more? (or Ctrl-C)"
 read more
