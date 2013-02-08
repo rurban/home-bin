@@ -35,7 +35,7 @@ docmd $cpan B::Flags Opcodes Math::Round Params::Classify
 if test -f ~/Perl/B-C/t/top100; then
   echo $cpan '$(cat ~/Perl/B-C/t/top100)'
   $cpan $(cat ~/Perl/B-C/t/top100)
-endif
+fi
 docmd $cpan Task::Cpanel::Core
 
 echo "# more? (or Ctrl-C)"
@@ -45,6 +45,7 @@ docmd $cpan Inline Bundle::CygwinVendor YAML::XS DBIx::Class
 # missing Kensho deps
 docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types
 # Task::Kensho assumes there is only one archlib per perl, do it manually
-perl -lne '/=item L<(.+?)[\|>]/ and print $1' /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm \
+if test -f /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm; then
+  perl -lne '/=item L<(.+?)[\|>]/ and print $1' /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm \
     | xargs $cpan
-
+fi
