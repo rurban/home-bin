@@ -6,7 +6,7 @@
 # -m  multi
 
 if [ -z "$perlall" ]; then
-  perlall=$(perlall -m list|sed 's,/usr/local/bin/perl,,')
+  perlall=$(perlall -m list|sed 's,/usr/local/bin/perl,,'|egrep -v -- '-asan|-mem')
 #else
 #  export perlall=${perlall:-"5.14.2-nt 5.12.3-m 5.10.1-m 5.8.8-nt 5.8.9 5.15.4d-nt 5.6.2d-nt 5.8.4d-nt 5.8.5d-nt 5.8.9d 5.10.1d-nt 5.14.0d-m 5.14.1-nt 5.14.1d-nt 5.14.2d 5.15.3-nt"}
 fi
@@ -88,8 +88,8 @@ do
 	  # B::C only: test with modules
 	  if [ "$base" = "perlall-maketest-m" -a -d ".git" -a $(basename $PWD) = "B-C" ]
 	  then
-              __print1 "perl$p -Mblib t/modules.t t/top100 -log"
-	      perl$p -Mblib t/modules.t t/top100 -log >> $log
+              __print1 "perl$p -Iblib/arch -Iblib/lib t/modules.t t/top100 -log"
+	      perl$p -Iblib/arch -Iblib/lib t/modules.t t/top100 -log >> $log
               echo "----" >> $log
 	  fi
           ( echo >> $log

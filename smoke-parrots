@@ -7,7 +7,7 @@ branches="master"
 # all branches
 plus_egrep_branches="origin/"
 
-parrotdir=/usr/src/parrot
+parrotdir=/usr/src/p6
 smokedir=$parrotdir/smoke
 if [ ! -d $smokedir ]; then
   smokedir=$parrotdir/master
@@ -30,6 +30,8 @@ then
   then
       stashname="smoke `date +%F` `git name-rev --name-only HEAD`"
       git stash save $stashname
+      git clean -q -dxf || git clean -d -x
+      git reset --hard
   fi
 fi
 
@@ -64,5 +66,4 @@ done
 
 git co -q $curbranch
 git reset -q --hard
-test -n $stashname && git stash pop $stashname 2>/dev/null >/dev/null
-
+#test -n $stashname && git stash pop $stashname 2>/dev/null >/dev/null

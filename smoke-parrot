@@ -4,7 +4,7 @@
 
 # Some system dependant configs
 suffix=
-parrotdir=/usr/src/parrot
+parrotdir=/usr/src/p6
 smokedir=$parrotdir/smoke
 if [ ! -d $smokedir ]; then
   smokedir=$parrotdir/master
@@ -136,6 +136,8 @@ then
   if git status|grep " Changes " 2>/dev/null
   then
     git stash save "smoke `date +%F` `git name-rev --name-only HEAD`"
+    git clean -q -dxf || git clean -d -x
+    git reset --hard
   fi
 fi
 
