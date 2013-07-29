@@ -7,9 +7,13 @@ fi
 . ~/.alias-perl
 cat ~/.alias-perl
 
+cpan="AUTOMATED_TESTING=1 PERL_MM_USE_DEFAULT=1 $p -S cpan"
 exp=~/.cpan/CPAN/nosqlite.pm
-jpan="$p -S cpan -j $exp"
-cpan="$p -S cpan"
+if [ -e $exp ]; then
+  jpan="$cpan -j $exp"
+else
+  jpan="$cpan"
+fi
 
 function docmd {
   echo $*
@@ -36,7 +40,7 @@ if test -f ~/Perl/B-C/t/top100; then
   echo $cpan '$(cat ~/Perl/B-C/t/top100)'
   $cpan $(cat ~/Perl/B-C/t/top100)
 fi
-docmd $cpan Task::Cpanel::Core
+docmd $cpan Text::CSV_XS Task::Cpanel::Core Cpanel::JSON::XS
 
 echo "# more? (or Ctrl-C)"
 read more
