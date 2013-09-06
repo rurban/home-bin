@@ -27,7 +27,7 @@ function docmd {
 
 echo '# bootstrapping CPAN::SQLite'
 # if all the deps would be correct it would be a better world
-docmd $jpan YAML DBI DBD::SQLite File::Which CPAN::SQLite
+docmd $jpan YAML DBI DBD::SQLite File::Which Compress::Raw::Zlib CPAN::SQLite
 # now we should have a working CPAN::SQLite and faster startup
 # but no concurrent usage. use a 2nd p-init as j-init to avoid CPAN::SQLite
 
