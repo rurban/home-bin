@@ -35,7 +35,7 @@ then
   fi
 fi
 
-for s in `git branch -r | egrep "$plus_egrep_branches" | egrep -v '(->|HEAD)'`
+for s in `git branch -r | egrep "$plus_egrep_branches" | egrep -v '(->|HEAD|gh-pages)'`
 do
     s="`echo $s|sed 's,^origin/,,g'`"
     if [ -n $s ]; then
@@ -47,8 +47,12 @@ curbranch=`git name-rev --name-only HEAD`
 for b in $branches
 do
     fbranch="`echo $b|sed -e's,/,_,g'`"
-    log=$parrotdir/smoked.$fbranch.log
-    tmplog=$parrotdir/smoked.$fbranch.log.tmp
+    if [ -d $parrotdir/smoked ]; then
+      log=$parrotdir/smoked/smoked.$fbranch.log
+    else
+      log=$parrotdir/smoked.$fbranch.log
+    fi
+    tmplog=$log.tmp
     $cmd $b 2>&1 >> $tmplog
     if grep "no changes for " $tmplog >/dev/null; then
 	rm $tmplog

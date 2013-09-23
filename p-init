@@ -7,8 +7,10 @@ fi
 . ~/.alias-perl
 cat ~/.alias-perl
 
-AUTOMATED_TESTING=1
-PERL_MM_USE_DEFAULT=1
+save_AUTOMATED_TESTING=$AUTOMATED_TESTING
+export AUTOMATED_TESTING=1
+save_PERL_MM_USE_DEFAULT=$PERL_MM_USE_DEFAULT
+export PERL_MM_USE_DEFAULT=1
 cpan="$p -S cpan"
 exp=~/.cpan/CPAN/nosqlite.pm
 if [ -e $exp ]; then
@@ -27,7 +29,7 @@ function docmd {
 
 echo '# bootstrapping CPAN::SQLite'
 # if all the deps would be correct it would be a better world
-docmd $jpan YAML DBI DBD::SQLite File::Which Compress::Raw::Zlib CPAN::SQLite
+docmd $jpan YAML DBI DBD::SQLite Compress::Raw::Zlib File::Which CPAN::SQLite
 # now we should have a working CPAN::SQLite and faster startup
 # but no concurrent usage. use a 2nd p-init as j-init to avoid CPAN::SQLite
 
@@ -41,6 +43,11 @@ if test -f ~/Perl/B-C/t/top100; then
 fi
 docmd $cpan Bundle::CygwinVendor YAML::XS
 
+AUTOMATED_TESTING=$save_AUTOMATED_TESTING
+export AUTOMATED_TESTING
+PERL_MM_USE_DEFAULT=$save_PERL_MM_USE_DEFAULT
+export PERL_MM_USE_DEFAULT
+
 if [ -z "$2" ]; then
     echo "# more? (or Ctrl-C)"
     read more
@@ -49,6 +56,11 @@ else
 	exit
     fi
 fi
+
+save_AUTOMATED_TESTING=$AUTOMATED_TESTING
+export AUTOMATED_TESTING=1
+save_PERL_MM_USE_DEFAULT=$PERL_MM_USE_DEFAULT
+export PERL_MM_USE_DEFAULT=1
 
 # Class::MethodMaker rm SIGNATURE
 docmd $cpan Text::CSV_XS Task::Cpanel::Core Cpanel::JSON::XS Inline DBIx::Class
@@ -59,3 +71,8 @@ if test -f /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm; then
   perl -lne '/=item L<(.+?)[\|>]/ and print $1' /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm \
     | xargs $cpan
 fi
+
+AUTOMATED_TESTING=$save_AUTOMATED_TESTING
+export AUTOMATED_TESTING
+PERL_MM_USE_DEFAULT=$save_PERL_MM_USE_DEFAULT
+export PERL_MM_USE_DEFAULT

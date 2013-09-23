@@ -88,8 +88,8 @@ do
 	  # B::C only: test with modules
 	  if [ "$base" = "perlall-maketest-m" -a -d ".git" -a $(basename $PWD) = "B-C" ]
 	  then
-              __print1 "perl$p -Iblib/arch -Iblib/lib t/modules.t t/top100 -log"
-	      perl$p -Iblib/arch -Iblib/lib t/modules.t t/top100 -log >> $log
+              __print1 "perl$p -Iblib/arch -Iblib/lib t/modules.t -no-subset -no-date -log t/top100 t/top100"
+	      perl$p -Iblib/arch -Iblib/lib t/modules.t -no-subset -no-date -log t/top100 >> $log
               echo "----" >> $log
 	  fi
           ( echo >> $log
