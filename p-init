@@ -67,9 +67,9 @@ docmd $cpan Text::CSV_XS Task::Cpanel::Core Cpanel::JSON::XS Inline DBIx::Class
 # missing Kensho deps
 docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types
 # Task::Kensho assumes there is only one archlib per perl, do it manually
-if test -f /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm; then
-  perl -lne '/=item L<(.+?)[\|>]/ and print $1' /usr/local/lib/perl5/site_perl/5.14.2/Task/Kensho.pm \
-    | xargs $cpan
+file=`perldoc -l Task::Kensho`
+if [ -e $file ]; then
+  perl -lne '/=item L<(.+?)[\|>]/ and print $1' $file | xargs $cpan
 fi
 
 AUTOMATED_TESTING=$save_AUTOMATED_TESTING
