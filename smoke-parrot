@@ -144,7 +144,7 @@ fi
 smoked=smoked$suffix
 fbranch=$smoked."`echo $branch|sed -e's,/,_,'`"
 git fetch origin
-oldrev="`cat $parrotdir/$fbranch`"
+oldrev="`cat $parrotdir/smoked/$fbranch`"
 newrev="`git rev-parse origin/$branch`"
 if [ x$oldrev = x$newrev ]
 then
@@ -169,6 +169,6 @@ else
   $cmd $make -s
   $cmd $make -s smolder_test
   echo branch $branch
-  git rev-parse $branch && test -f Makefile && echo $newrev > $parrotdir/$fbranch
+  git rev-parse $branch && test -f Makefile && echo $newrev > $parrotdir/smoked/$fbranch
   rm $lock 2>/dev/null
 fi
