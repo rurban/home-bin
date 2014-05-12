@@ -70,6 +70,8 @@ docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types
 file=`perldoc -l Task::Kensho`
 if [ -e $file ]; then
   perl -lne '/=item L<(.+?)[\|>]/ and print $1' $file | xargs $cpan
+else
+  $cpan Task::Kensho  
 fi
 
 AUTOMATED_TESTING=$save_AUTOMATED_TESTING
