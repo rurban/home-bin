@@ -7,9 +7,9 @@ split_fileline() {
 
 # check if emacs needs to be started
 if [ -z "`pgrep -l emacs`" ]; then
-    echo Need to boot emacs
+    echo "Need to boot emacs (15s...)"
     emacs
-    sleep 5s
+    sleep 15s
 fi
 for a in $*
 do
