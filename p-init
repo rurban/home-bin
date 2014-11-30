@@ -36,7 +36,7 @@ docmd $jpan YAML DBI DBD::SQLite Compress::Raw::Zlib File::Which CPAN::SQLite
 echo '# bootstrapping Bundle::CPANReporter2'
 docmd $cpan Params::Util Bundle::CPANReporter2
 
-docmd $cpan B::Flags Opcodes Math::Round Params::Classify
+docmd $cpan B::Flags Opcodes Math::Round Params::Classify Sub::Identify
 if test -f ~/Perl/B-C/t/top100; then
   echo $cpan '$(cat ~/Perl/B-C/t/top100)'
   $cpan $(cat ~/Perl/B-C/t/top100)
