@@ -12,7 +12,7 @@ fi
 lsmokedir=$smokedir
 opts=
 perl=perl
-make=make
+make="make -j3"
 # setup mingw paths, or msvc paths via global batch file
 winbat=perl514
 
