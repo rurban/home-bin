@@ -69,7 +69,7 @@ docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types
 # Task::Kensho assumes there is only one archlib per perl, do it manually
 file=`perldoc -l Task::Kensho`
 if [ -e $file ]; then
-  perl -lne '/=item L<(.+?)[\|>]/ and print $1' $file | xargs $cpan
+  perl -lne '/=(?:item|head2|head3) L<(.+?)[\|>]/ and print $1' $file | xargs $cpan
 else
   $cpan Task::Kensho  
 fi
