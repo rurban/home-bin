@@ -63,15 +63,15 @@ save_PERL_MM_USE_DEFAULT=$PERL_MM_USE_DEFAULT
 export PERL_MM_USE_DEFAULT=1
 
 # Class::MethodMaker rm SIGNATURE
-docmd $cpan Text::CSV_XS Task::Cpanel::Core Cpanel::JSON::XS Inline DBIx::Class
+docmd $cpan Text::CSV_XS Task::Cpanel::Core Cpanel::JSON::XS Inline DBIx::Class TryCatch
 # missing Kensho deps
-docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types
+docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types 
 # Task::Kensho assumes there is only one archlib per perl, do it manually
 file=`perldoc -l Task::Kensho`
 if [ -e $file ]; then
   perl -lne '/=(?:item|head2|head3) L<(.+?)[\|>]/ and print $1' $file | xargs $cpan
 else
-  $cpan Task::Kensho  
+  docmd $cpan Task::Kensho  
 fi
 
 AUTOMATED_TESTING=$save_AUTOMATED_TESTING
