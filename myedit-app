@@ -1,0 +1,22 @@
+#!/bin/sh
+# emacsclient starter which accepts path/file:line
+# TODO: check for existance of $1 because a string:num filename might exist
+split_fileline() {
+  a=`perl -e'$_=shift; print (/^(.*):(\d+)$/ ? "+$2 $1" : $_)' $a`
+}
+
+#emacsclient=emacsclient
+emacsclient=/Applications/MacPorts/Emacs.app/Contents/MacOS/bin/emacsclient
+
+# check if emacs needs to be started
+if [ -z "`pgrep -l Emacs`" ]; then
+    echo "Need to boot emacs (15s...)"
+    open /Applications/MacPorts/Emacs.app
+    #emacs
+    sleep 15s
+fi
+for a in $*
+do
+  split_fileline $a
+  $emacsclient $a
+done
