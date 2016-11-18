@@ -41,7 +41,7 @@ if test -f ~/Perl/B-C/t/top100; then
   echo $cpan '$(cat ~/Perl/B-C/t/top100)'
   $cpan $(cat ~/Perl/B-C/t/top100)
 fi
-docmd $cpan Bundle::CygwinVendor YAML::XS
+docmd $cpan Bundle::CygwinVendor Cpanel::JSON::XS Module::Install
 
 AUTOMATED_TESTING=$save_AUTOMATED_TESTING
 export AUTOMATED_TESTING
@@ -63,7 +63,8 @@ save_PERL_MM_USE_DEFAULT=$PERL_MM_USE_DEFAULT
 export PERL_MM_USE_DEFAULT=1
 
 # Class::MethodMaker rm SIGNATURE
-docmd $cpan Text::CSV_XS Task::Cpanel::Core Cpanel::JSON::XS Inline DBIx::Class TryCatch
+docmd $cpan Text::CSV_XS YAML::XS Task::Cpanel::Core
+docmd $cpan Inline DBIx::Class TryCatch
 # missing Kensho deps
 docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types 
 # Task::Kensho assumes there is only one archlib per perl, do it manually
