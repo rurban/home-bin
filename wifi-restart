@@ -1,0 +1,4 @@
+#!/bin/sh
+# on a macbook air
+networksetup -setairportpower en0 off
+networksetup -setairportpower en0 on
