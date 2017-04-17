@@ -64,7 +64,7 @@ export PERL_MM_USE_DEFAULT=1
 
 # Class::MethodMaker rm SIGNATURE
 docmd $cpan Text::CSV_XS YAML::XS Task::Cpanel::Core
-docmd $cpan Inline DBIx::Class TryCatch
+docmd $cpan Inline DBIx::Class TryCatch Test::DependentModules
 # missing Kensho deps
 docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types 
 # Task::Kensho assumes there is only one archlib per perl, do it manually
