@@ -1,6 +1,6 @@
 #!/bin/bash
 
-test -n $1 || (echo "Usage $0: server [files...]"; exit)
+test -n "$1" || (echo "Usage $0: server [files...]"; exit)
 tpwd=`pwd`
 len=${#HOME}
 if [ ${tpwd:0:$len} = $HOME ]; then
@@ -9,7 +9,7 @@ fi
 server=$1
 shift
 files="$@"
-test -z $files && exit
+test -z "$files" && exit
 
 echo $files
 for f in $files; do

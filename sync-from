@@ -1,6 +1,6 @@
 #!/bin/sh
 
-test -n $1 || (echo "Usage $0: server"; exit)
+test -n "$1" || (echo "Usage $0: server [files...]"; exit)
 tpwd=`pwd`
 len=${#HOME}
 if [ ${tpwd:0:$len} = $HOME ]; then

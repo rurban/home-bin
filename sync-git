@@ -1,6 +1,11 @@
 #!/bin/sh
 
-test -n $1 || (echo "Usage $0: server"; exit)
+test -n "$1" || (echo "Usage $0 [-f] server"; exit)
+if [ $1 = -f ]; then
+    force=1
+    shift
+    test -n "$1" || (echo "Usage $0 [-f] server"; exit)
+fi
 tpwd=`pwd`
 len=${#HOME}
 if [ ${tpwd:0:$len} = $HOME ]; then
@@ -10,11 +15,13 @@ files="`git dr|cut -c40-`"
 test -z "$files" && exit
 
 echo $files
-for f in $files; do
-    rsync -avzn "$f" ${1}:"$tpwd/$f"
-done
-echo Continue?
-read
+if [ -z $force ]; then
+    for f in $files; do
+        rsync -avzn "$f" ${1}:"$tpwd/$f"
+    done
+    echo Continue?
+    read
+fi
 
 for f in $files; do
     rsync -avz "$f" ${1}:"$tpwd/$f"
