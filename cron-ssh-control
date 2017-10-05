@@ -1,0 +1,4 @@
+#!/bin/sh
+if [ ! -e "$HOME/.ssh/control/git@github.com:22" ]; then
+    ssh -fNn -o ControlMaster=auto -o ControlPath=$HOME/.ssh/control/%r@%h:%p git@github.com
+fi

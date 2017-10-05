@@ -1,0 +1,46 @@
+#!/bin/sh
+
+cd ~/Software/pcre
+branch=`git branch|grep '^\* '|cut -c3-`
+STASH=
+log=/var/log/cron-pcre.log
+
+date >$log
+if [ "$branch" != master ]; then
+    if git checkout -q master; then
+        true
+    else
+        git stash save cron 2>&1 >>$log
+        STASH=1
+        git reset --hard    2>&1 >>$log
+        git checkout master 2>&1 >>$log
+    fi
+fi
+
+(git svn fetch && git merge svn/trunk && \
+    git push -f origin master) 2>>$log >>$log
+
+if grep -q 'refs/remotes/svn/trunk' $log; then
+    true
+else
+    git checkout -q $branch
+    if [ x$STASH = x1 ]; then
+        git stash -q pop
+    fi
+    exit
+fi
+
+# for the cron mail
+cat $log
+git checkout ci && \
+  git rebase master && \
+  git checkout bugfixes && \
+  git rebase ci && \
+  git push origin -f
+
+./upd.sh
+git checkout $branch
+
+if [ x$STASH = x1 ]; then
+    git stash -q pop
+fi

@@ -1,0 +1,43 @@
+#!/bin/sh
+
+cd ~/Software/libsigsegv
+branch=`git branch|grep '^\* '|cut -c3-`
+STASH=
+log=/var/log/cron-libsigsegv.log
+
+date >$log
+if [ "$branch" != master ]; then
+    if git checkout -q master; then
+        true
+    else
+        git stash save cron 2>&1 >>$log
+        STASH=1
+        git reset --hard    2>&1 >>$log
+        git checkout master 2>&1 >>$log
+    fi
+fi
+
+(git pull up && \
+    git push -f origin master) 2>>$log >>$log
+
+if grep -q '^Updating ' $log; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    git checkout -q $branch
+    if [ x$STASH = x1 ]; then
+        git stash -q pop
+    fi
+    exit
+fi
+
+# for the cron mail
+cat $log
+git checkout win64 && \
+  (git rebase master && git push origin -f) || git rebase --abort
+
+git checkout $branch
+if [ x$STASH = x1 ]; then
+    git stash -q pop
+fi
