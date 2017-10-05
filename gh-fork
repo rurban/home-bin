@@ -1,0 +1,4 @@
+#!/bin/sh
+hub fork $* && \
+  git remote rename origin up && \
+  git remote rename rurban origin
