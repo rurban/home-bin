@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+# commit --fixup (Instant Fixup) over the last commit touching the given files
+# with rebase --autosquash
+
+my $debug = 1;
+my (%work, @work);
+use Data::Dumper;
+
+# 1. collect commits for each file
+for (@ARGV) {
+  die "$_ $!" unless -e $_;
+  my $sha1 = `git log -n1 --format="%H" "$_"`;
+  die "no git commit found for $_" unless $sha1;
+  chomp $sha1;
+  $work{$_} = $sha1;
+}
+print Data::Dumper->Dump([\%work],['work']) if $debug;
+
+# 2. sort commits from early to newest
+if (keys(%work) > 1) {
+  warn "sort commits from early to newest";
+  my $skip = 0;
+  my $n = 25;
+  my $found = 0;
+  my %index; # position in log per file
+  while (keys %index < keys %work) {
+    # search sha1 in chunks of 25
+    my $range = `git log -n$n --skip=$skip --format="%H"`;
+    my @range = split/\n/, $range;
+    for my $file (keys(%work)) {
+      my $sha1 = $work{$file};
+      my $index = index_at($sha1, \@range);
+      if ($index >= 0) {
+        $index{$file} = $skip + $index;
+        $found++;
+      }
+    }
+    $skip += $n;
+    print "skip=$skip\n" if $debug;
+    print Data::Dumper->Dump([\%index],['index']) if $debug;
+    die "TODO" if keys %index < keys %work;
+  }
+  my @index = sort {$index{$b} <=> $index{$a}} keys %index;
+  # index file1 => 1, file2 => 1
+  my $previdx = $index{$index[0]};
+  for my $file (@index) {
+    my $sha1 = $work{$file};
+    my $curidx = $index{$file};
+    if (!@work) { # add new work item
+      push @work, [$sha1 => [$file]];
+    }
+    elsif ($previdx == $curindex) {
+      # add file to current @work
+      my $aref = $work[$#work]->[1];
+      push @$aref, $file;
+    } else { # add new work item
+      push @work, [$sha1 => [$file]];
+    }
+  }
+} else {
+  for my $file (keys(%work)) {
+    my $sha1 = $work{$file};
+    push @work, [$sha1 => [$file]];
+  }
+}
+
+# find string in array, and return the index or -1.
+sub index_at {
+  my ($s, $aref) = @_;
+  for (0 .. scalar @$aref) {
+    return $_ if $s eq $aref->[$_];
+  }
+  return -1;
+}
+
+print Data::Dumper->Dump([\@work],['work']) if $debug;
+# 3. apply fixups from far to near and hope they apply cleanly
+while (my $w = shift @work) {
+  my $sha1 = $w->[0];
+  my $files = join('" "', @{$w->[1]});
+  next unless $sha1;
+  next unless $files;
+  my $result = `git add -u -- "$files"`;
+  print $result;
+  if ($result !~ /nothing added/) {
+    print `git commit --no-edit --fixup=$sha1 --`;
+    $ENV{GIT_EDITOR} = 'true';
+    $result = `git rebase --autosquash --autostash $sha1^`;
+    print $result;
+    # untested!
+    if ($result =~ /conflict/) {
+      print "skip @work";
+      last;
+    }
+  }
+}
