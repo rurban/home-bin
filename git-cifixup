@@ -1,10 +1,13 @@
 #!/usr/bin/perl
 # commit --fixup (Instant Fixup) over the last commit touching the given files
-# with rebase --autosquash
+# with rebase -i --autosquash
+# usage: git cifixup `git diff --raw|cut -c40-`
 
 my $debug = 1;
+if ($debug) {
+  require Data::Dumper; import Data::Dumper;
+}
 my (%work, @work);
-use Data::Dumper;
 
 # 1. collect commits for each file
 for (@ARGV) {
@@ -18,14 +21,18 @@ print Data::Dumper->Dump([\%work],['work']) if $debug;
 
 # 2. sort commits from early to newest
 if (keys(%work) > 1) {
-  warn "sort commits from early to newest";
+  print "sorting commits from early to newest" if $debug;
   my $skip = 0;
-  my $n = 25;
+  my $n = 50;
   my $found = 0;
   my %index; # position in log per file
+  # TODO: ensure we don't pass acrosss origin/master
+  # FIXME: search in list of HEAD to origin/master, not chunks backwards.
   while (keys %index < keys %work) {
-    # search sha1 in chunks of 25
-    my $range = `git log -n$n --skip=$skip --format="%H"`;
+    # search sha1 in chunks of 50
+    my $cmd = qq(git log -n$n --skip=$skip --format="%H");
+    print $cmd if $debug;
+    my $range = `$cmd`;
     my @range = split/\n/, $range;
     for my $file (keys(%work)) {
       my $sha1 = $work{$file};
@@ -38,14 +45,17 @@ if (keys(%work) > 1) {
     $skip += $n;
     print "skip=$skip\n" if $debug;
     print Data::Dumper->Dump([\%index],['index']) if $debug;
-    die "TODO" if keys %index < keys %work;
+    # looks ok, but chunking still untested
+    die "TODO next chunk" if keys %index < keys %work;
   }
+
   my @index = sort {$index{$b} <=> $index{$a}} keys %index;
   # index file1 => 1, file2 => 1
   my $previdx = $index{$index[0]};
   for my $file (@index) {
     my $sha1 = $work{$file};
     my $curidx = $index{$file};
+    # TODO: really just use a @files string, not $aref. much easier to add to
     if (!@work) { # add new work item
       push @work, [$sha1 => [$file]];
     }
@@ -75,6 +85,9 @@ sub index_at {
 
 print Data::Dumper->Dump([\@work],['work']) if $debug;
 # 3. apply fixups from far to near and hope they apply cleanly
+# TODO maybe change to sort order, from latest to earliest,
+# because then the chances are higher.
+# reverse @work, or pop @work
 while (my $w = shift @work) {
   my $sha1 = $w->[0];
   my $files = join('" "', @{$w->[1]});
@@ -83,13 +96,15 @@ while (my $w = shift @work) {
   my $result = `git add -u -- "$files"`;
   print $result;
   if ($result !~ /nothing added/) {
+    my $editor = $ENV{GIT_EDITOR};
     print `git commit --no-edit --fixup=$sha1 --`;
-    $ENV{GIT_EDITOR} = 'true';
-    $result = `git rebase --autosquash --autostash $sha1^`;
+    local $ENV{GIT_EDITOR} = 'true';
+    $result = `git rebase -i --autosquash --autostash $sha1^`;
     print $result;
     # untested!
     if ($result =~ /conflict/) {
-      print "skip @work";
+      $ENV{GIT_EDITOR} = $editor;
+      print "skip @work"; # TODO load editor (emacsclient w/ magit) with the conflicts
       last;
     }
   }
