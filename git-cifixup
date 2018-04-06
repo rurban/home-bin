@@ -2,6 +2,7 @@
 # commit --fixup (Instant Fixup) over the last commit touching the given files
 # with rebase -i --autosquash
 # usage: git cifixup `git diff --raw|cut -c40-`
+# TODO: take also all cached file changes added to the index: diff --raw --cached
 
 my $debug = 1;
 if ($debug) {

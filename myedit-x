@@ -16,7 +16,7 @@ fi
 for a in $*
 do
   split_fileline $a
-  $emacsclient $a &
-  sleep 1
-  kill %1
+  exec $emacsclient $a &
+  #sleep 1
+  #kill %1
 done
