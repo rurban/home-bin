@@ -14,11 +14,11 @@ test -z $files && exit
 echo $files
 for f in $files; do
     echo rsync -avzn ${server}:"$tpwd/$f" "$f"
-    test -e $f && rsync -avzn ${server}:"$tpwd/$f" "$f"
+    rsync -avzn ${server}:"$tpwd/$f" "$f"
 done
 echo Continue?
 read
 
 for f in $files; do
-    test -e $f && rsync -avz ${server}:"$tpwd/$f" "$f"
+    rsync -avz ${server}:"$tpwd/$f" "$f"
 done

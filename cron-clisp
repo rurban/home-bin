@@ -3,7 +3,7 @@
 cd /usr/src/clisp
 branch=`git branch|grep '^\* '|cut -c3-`
 STASH=
-log=/var/log/cron-clisp.log
+log=/tmp/cron-clisp.log
 
 date >$log
 if [ "$branch" != master ]; then
@@ -30,6 +30,7 @@ if grep -q '^no changes found' $log; then
 fi
 
 # for the cron mail
+cat $log >>/var/log/cron-clisp.log
 cat $log
 git checkout ci && \
   git rebase master && \

@@ -3,7 +3,7 @@
 cd ~/Software/libsigsegv
 branch=`git branch|grep '^\* '|cut -c3-`
 STASH=
-log=/var/log/cron-libsigsegv.log
+log=/tmp/cron-libsigsegv.log
 
 date >$log
 if [ "$branch" != master ]; then
@@ -33,6 +33,7 @@ else
 fi
 
 # for the cron mail
+cat $log >>/var/log/cron-libsigsegv.log
 cat $log
 git checkout win64 && \
   (git rebase master && git push origin -f) || git rebase --abort

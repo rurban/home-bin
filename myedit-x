@@ -10,13 +10,13 @@ emacsclient=emacsclient
 # check if emacs needs to be started
 if [ -z "`pgrep -l emacs`" ]; then
     echo "Need to boot emacs (15s...)"
-    emacs &
+    EDITOR=emacsclient /opt/local/bin/emacs &
     sleep 15s
 fi
 for a in $*
 do
   split_fileline $a
   exec $emacsclient $a &
-  #sleep 1
+  #sleep 10
   #kill %1
 done

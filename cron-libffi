@@ -3,7 +3,7 @@
 cd ~/Software/libffi
 branch=`git branch|grep '^\* '|cut -c3-`
 STASH=
-log=/var/log/cron-libffi.log
+log=/tmp/cron-libffi.log
 
 date >$log
 if [ "$branch" != master ]; then
@@ -33,9 +33,10 @@ else
 fi
 
 # for the cron mail
+cat $log >>/var/log/cron-libffi.log
 cat $log
-git checkout long_keys && \
-  (git rebase master && git push origin -f) || git rebase --abort
+#git checkout long_keys && \
+#  (git rebase master && git push origin -f) || git rebase --abort
 
 git checkout $branch
 if [ x$STASH = x1 ]; then

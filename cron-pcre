@@ -3,7 +3,7 @@
 cd ~/Software/pcre
 branch=`git branch|grep '^\* '|cut -c3-`
 STASH=
-log=/var/log/cron-pcre.log
+log=/tmp/cron-pcre.log
 
 date >$log
 if [ "$branch" != master ]; then
@@ -31,6 +31,7 @@ else
 fi
 
 # for the cron mail
+cat $log >>/var/log/cron-pcre.log
 cat $log
 git checkout ci && \
   git rebase master && \
