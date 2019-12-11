@@ -1,0 +1,4 @@
+#! /bin/sh
+
+/usr/bin/mv -f TAGS TAGS~ 2>/dev/null
+/usr/bin/find . \( -iname \*.cc -o -iname \*.cpp -o -iname \*.c -o -iname \*.hh -o -iname \*.hpp -o -iname \*.h \) -exec etags -a --language=c++ \{\} \;
