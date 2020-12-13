@@ -11,37 +11,39 @@ save_AUTOMATED_TESTING=$AUTOMATED_TESTING
 export AUTOMATED_TESTING=1
 save_PERL_MM_USE_DEFAULT=$PERL_MM_USE_DEFAULT
 export PERL_MM_USE_DEFAULT=1
-cpan="$p -S cpan"
+cpanf=`$p -e'print $]<=5.008005 ? q(cpan5.8.5) : q(cpan)'`
+cpan="$p -S $cpanf"
 exp=~/.cpan/CPAN/nosqlite.pm
-if [ -e $exp ]; then
-  jpan="$cpan -j $exp"
+if [ -e $exp -a x$cpanf = xcpan ]; then
+    jpan="$cpan -j $exp"
 else
-  jpan="$cpan"
+    jpan="$cpan"
 fi
 if [ $(basename $0) = "j-init" ]; then
-  cpan=$jpan
+    cpan=$jpan
 fi
 
 function docmd {
-  echo $*
-  $*
+    echo $*
+    $*
 }
 
 echo '# bootstrapping CPAN::SQLite'
 # if all the deps would be correct it would be a better world
-docmd $jpan YAML DBI DBD::SQLite Compress::Raw::Zlib File::Which CPAN::SQLite
+docmd $jpan YAML Clone Params::Util DBI DBD::SQLite Compress::Raw::Zlib \
+            File::Which CPAN::SQLite
 # now we should have a working CPAN::SQLite and faster startup
 # but no concurrent usage. use a 2nd p-init as j-init to avoid CPAN::SQLite
 
 echo '# bootstrapping Bundle::CPANReporter2'
 docmd $cpan Params::Util HTML::Parser Bundle::CPANReporter2
 
-docmd $cpan B::Flags Opcodes Math::Round Params::Classify Sub::Identify
-if test -f ~/Perl/B-C/t/top100; then
-  echo $cpan '$(cat ~/Perl/B-C/t/top100)'
-  $cpan $(cat ~/Perl/B-C/t/top100)
+docmd $cpan B::Flags Opcodes Math::Round Params::Classify Sub::Identify Module::Signature
+if [ -f ~/Perl/B-C/t/top100 ]; then
+    echo $cpan '$(cat ~/Perl/B-C/t/top100)'
+    $cpan $(cat ~/Perl/B-C/t/top100)
 fi
-docmd $cpan Bundle::CygwinVendor Cpanel::JSON::XS Module::Install
+docmd $cpan Cpanel::JSON::XS Module::Install PerlIO::utf8_strict Test::Kwalitee Test::CheckManifest Test::CPAN::Meta Pod::Spell::CommonMistakes Test::Spelling Test::Pod Devel::Refcount Test::MinimumVersion Test::LeakTrace Bundle::CygwinVendor
 
 AUTOMATED_TESTING=$save_AUTOMATED_TESTING
 export AUTOMATED_TESTING
@@ -51,7 +53,7 @@ export PERL_MM_USE_DEFAULT
 if [ -z "$2" ]; then
     echo "# more? (or Ctrl-C)"
     read more
-else
+else      # or
     if [ $2 = "--less" ]; then
 	exit
     fi
@@ -63,16 +65,16 @@ save_PERL_MM_USE_DEFAULT=$PERL_MM_USE_DEFAULT
 export PERL_MM_USE_DEFAULT=1
 
 # Class::MethodMaker rm SIGNATURE
-docmd $cpan Text::CSV_XS YAML::XS Task::Cpanel::Core
+docmd $cpan Text::CSV_XS YAML::XS YAML::Safe
 docmd $cpan Inline DBIx::Class TryCatch Test::DependentModules
 # missing Kensho deps
-docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types 
+docmd $cpan SQL::Abstract Module::Find Mouse MouseX::Types Method::Signatures 
 # Task::Kensho assumes there is only one archlib per perl, do it manually
 file=`perldoc -l Task::Kensho`
 if [ -e $file ]; then
-  perl -lne '/=(?:item|head2|head3) L<(.+?)[\|>]/ and print $1' $file | xargs $cpan
+    perl -lne '/=(?:item|head2|head3) L<(.+?)[\|>]/ and print $1' $file | xargs $cpan
 else
-  docmd $cpan Task::Kensho  
+    docmd $cpan Task::Kensho
 fi
 
 AUTOMATED_TESTING=$save_AUTOMATED_TESTING

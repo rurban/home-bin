@@ -8,11 +8,11 @@ split_fileline() {
 # check if emacs needs to be started
 if [ -z "`pgrep -l emacs`" ]; then
     echo "Need to boot emacs (15s...)"
-    emacs &
+    /usr/bin/emacs &
     sleep 15s
 fi
 for a in $*
 do
   split_fileline $a
-  emacsclient $a
+  /usr/bin/emacsclient $a &
 done

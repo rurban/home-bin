@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd /usr/src/clisp
+cd ~/Software/clisp || exit
 branch=`git branch|grep '^\* '|cut -c3-`
 STASH=
 log=/tmp/cron-clisp.log

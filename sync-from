@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 test -n "$1" || (echo "Usage $0: server [files...]"; exit)
 tpwd=`pwd`

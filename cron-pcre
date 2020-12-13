@@ -35,8 +35,6 @@ cat $log >>/var/log/cron-pcre.log
 cat $log
 git checkout ci && \
   git rebase master && \
-  git checkout bugfixes && \
-  git rebase ci && \
   git push origin -f
 
 ./upd.sh
