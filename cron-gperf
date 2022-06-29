@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cd ~/Software/gperf
-branch=`git branch|grep '^\* '|cut -c3-`
+branch=`git branch --show-current`
 STASH=
 log=/tmp/cron-gperf.log
 
@@ -35,8 +35,12 @@ fi
 # for the cron mail
 cat $log >>/var/log/cron-gperf.log
 cat $log
-git checkout long_keys && \
-  (git rebase master && git push origin -f) || git rebase --abort
+br="long_keys ci hashfuncs nbperf omit-lookup-function no-padding"
+for b in $br; do
+    git checkout $b
+    git pull --rebase origin $b || git rebase --abort
+    (git rebase --reapply-cherry-picks master && git push origin -f) || git rebase --abort
+fi
 
 git checkout $branch
 if [ x$STASH = x1 ]; then

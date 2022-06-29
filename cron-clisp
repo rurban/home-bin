@@ -33,11 +33,11 @@ fi
 cat $log >>/var/log/cron-clisp.log
 cat $log
 git checkout ci && \
-  git rebase master && \
+  git rebase --reapply-cherry-picks master && \
   git checkout bugfixes && \
-  git rebase ci && \
+  git rebase --reapply-cherry-picks ci && \
   git checkout translate && \
-  git rebase bugfixes && \
+  git rebase --reapply-cherry-picks bugfixes && \
   git push origin -f
 
 git checkout $branch

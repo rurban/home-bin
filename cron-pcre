@@ -17,12 +17,18 @@ if [ "$branch" != master ]; then
     fi
 fi
 
-(git svn fetch && git merge svn/trunk && \
+#(git svn fetch && git merge svn/trunk && \
+#    git push -f origin master) 2>>$log >>$log
+
+(git pull up master && \
     git push -f origin master) 2>>$log >>$log
 
-if grep -q 'refs/remotes/svn/trunk' $log; then
+#if grep -q 'refs/remotes/svn/trunk' $log; then
+if grep -q '^Updating ' $log; then
+    # need to rebase. pass the log to mail
     true
 else
+    # early silent exit
     git checkout -q $branch
     if [ x$STASH = x1 ]; then
         git stash -q pop

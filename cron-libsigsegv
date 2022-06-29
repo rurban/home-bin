@@ -36,7 +36,7 @@ fi
 cat $log >>/var/log/cron-libsigsegv.log
 cat $log
 git checkout win64 && \
-  (git rebase master && git push origin -f) || git rebase --abort
+  (git rebase --reapply-cherry-picks master && git push origin -f) || git rebase --abort
 
 git checkout $branch
 if [ x$STASH = x1 ]; then
