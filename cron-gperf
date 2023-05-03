@@ -1,48 +1,33 @@
 #!/bin/sh
 
 cd ~/Software/gperf
-branch=`git branch --show-current`
-STASH=
-log=/tmp/cron-gperf.log
+tmp=/tmp/cron-gperf.log
+log=/var/log/cron-gperf.log
 
-date >$log
-if [ "$branch" != master ]; then
-    if git checkout -q master; then
-        true
-    else
-        git stash save cron 2>&1 >>$log
-        STASH=1
-        git reset --hard    2>&1 >>$log
-        git checkout master 2>&1 >>$log
-    fi
-fi
+. ~/bin/_cron_common
+_cron_pre
 
 (git pull && \
     git push -f origin master) 2>>$log >>$log
 
-if grep -q '^Updating ' $log; then
+if grep -q '^Updating ' $tmp; then
     # need to rebase. pass the log to mail
     true
 else
     # early silent exit
-    git checkout -q $branch
-    if [ x$STASH = x1 ]; then
-        git stash -q pop
-    fi
+    _cron_post
     exit
 fi
 
 # for the cron mail
-cat $log >>/var/log/cron-gperf.log
-cat $log
+cat $tmp
+cat $tmp >>$log
 br="long_keys ci hashfuncs nbperf omit-lookup-function no-padding"
-for b in $br; do
+for b in $br
+do
     git checkout $b
     git pull --rebase origin $b || git rebase --abort
     (git rebase --reapply-cherry-picks master && git push origin -f) || git rebase --abort
-fi
+done
 
-git checkout $branch
-if [ x$STASH = x1 ]; then
-    git stash -q pop
-fi
+_cron_post

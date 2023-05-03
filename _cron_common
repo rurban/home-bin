@@ -1,0 +1,32 @@
+#!/bin/sh
+test -n $SSH_AUTH_SOCK || export SSH_AUTH_SOCK=/run/user/1000/keyring/ssh
+
+_cron_pre() {
+  branch=`git branch --no-color | grep '^\* ' | cut -c3-`
+  STASH=
+  if test -z $defbranch; then defbranch=master; fi
+  if test -n $log; then
+      if [ ! -w $log ]; then
+          sudo touch $log; sudo chown $USER $log
+      fi
+      date >$tmp
+      git diff | exit
+      if [ "$branch" != $defbranch ]; then
+          if git checkout -q $defbranch; then
+              true
+          else 
+              git stash save cron 2>&1 >>$tmp
+              STASH=1
+              git reset --hard    2>&1 >>$tmp
+              git checkout $defbranch 2>&1 >>$tmp
+          fi
+      fi
+  fi
+}
+
+_cron_post() {
+    git checkout $branch >>$log
+    if [ x$STASH = x1 ]; then
+        git stash -q pop
+    fi
+}

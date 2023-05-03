@@ -1,0 +1,36 @@
+#!/bin/sh
+
+cd ~/Software/gcc
+tmp=/tmp/cron-gcc.log
+log=/var/log/cron-gcc.log
+
+. ~/bin/_cron_common
+_cron_pre
+
+(git pull up master && \
+    git push -f origin master) 2>>$tmp >>$tmp
+
+if grep -q '^Updating ' $tmp; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    _cron_post
+    exit
+fi
+
+git checkout compatability-typo &&
+    (git rebase master && git push origin -f) 2>>$tmp >>$tmp \
+	|| git rebase --abort
+git checkout mallinfo2 &&
+    (git rebase master && git push origin -f) 2>>$tmp >>$tmp \
+	|| git rebase --abort
+git checkout homoglyph-pr103027 &&
+  (git rebase mallinfo2 && git push origin -f) 2>>$tmp >>$tmp \
+	|| git rebase --abort
+
+# for the cron mail
+cat $tmp
+cat $tmp >>$log
+
+_cron_post

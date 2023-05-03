@@ -1,0 +1,6 @@
+#!/bin/sh
+cd ~/Software/libredwg
+git bug bridge pull
+cd test/issues
+./upd.sh
+

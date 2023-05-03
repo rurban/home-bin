@@ -1,0 +1,50 @@
+#!/bin/sh
+
+cd ~/Software/rune
+branch=`git branch|grep '^\* '|cut -c3-`
+STASH=
+tmp=/tmp/cron-rune.log
+log=/var/log/cron-rune.log
+if [ ! -e $log ]; then
+    sudo touch $log; sudo chown $USER $log
+fi
+
+date >$tmp
+git diff | exit
+if [ "$branch" != main ]; then
+    if git checkout -q main; then
+        true
+    else
+        git stash save cron >>$tmp 2>&1
+        STASH=1
+        git reset --hard    >>$tmp 2>&1
+        git checkout main >>$tmp 2>&1
+    fi
+fi
+
+(git pull up main && \
+    git push -f origin main) 2>>$tmp >>$tmp
+
+if grep -q '^Updating ' $tmp; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    git checkout -q $branch
+    if [ x$STASH = x1 ]; then
+        git stash -q pop
+    fi
+    exit
+fi
+
+# for the cron mail
+cat $tmp
+cat $tmp >>$log
+
+#git checkout xoshiro && \
+#  (git rebase main && git push origin -f) || git rebase --abort
+
+git checkout $branch
+if [ x$STASH = x1 ]; then
+    git stash -q pop
+fi

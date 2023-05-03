@@ -1,0 +1,43 @@
+#!/bin/sh
+
+cd ~/Software/openssl
+tmp=/tmp/cron-ssl.log
+log=/var/log/cron-ssl.log
+. ~/bin/_cron_common
+_cron_pre
+
+(git pull up && \
+    git push -f origin master) 2>>$tmp >>$tmp
+
+if grep -q '^Updating ' $tmp; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    _cron_post
+    exit
+fi
+
+#(git checkout doc-gh19786 && git rebase master) 2>>$tmp >>$tmp \
+#  || git rebase --abort 2>>$tmp >>$tmp
+#(git checkout psk_client_cb && git rebase master && \
+#     git push origin -f) 2>>$tmp >>$tmp \
+#  || git rebase --abort 2>>$tmp >>$tmp
+
+(git checkout unused && git rebase master && \
+     git push origin -f unused) 2>>$tmp >>$tmp \
+  || git rebase --abort 2>>$tmp >>$tmp
+
+(git checkout Werror && git rebase master && \
+  git checkout unused_shim && git rebase Werror && \
+  git checkout deps && git rebase unused_shim && \
+  git checkout fuzz && git rebase deps && \
+  git push origin -f Werror unused_shim deps fuzz 2>>$tmp >>$tmp \
+) || git rebase --abort 2>>$tmp >>$tmp
+
+# for the cron mail
+cat $tmp
+cat $tmp >>$log
+
+_cron_post
+git push origin -f >>$log

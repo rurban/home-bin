@@ -1,0 +1,32 @@
+#!/bin/sh
+
+cd ~/Software/binutils-gdb
+tmp=/tmp/cron-gdb.log
+log=/var/log/cron-gdb.log
+
+. ~/bin/_cron_common
+_cron_pre
+
+(git pull up && \
+    git push -f origin master) 2>>$tmp >>$tmp
+
+if grep -q '^Updating ' $tmp; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    _cron_post
+    exit
+fi
+
+# for the cron mail
+cat $tmp
+cat $tmp >>$log
+#git submodule update --init >>$log
+#git checkout ci && \
+#  (git rebase master && git push origin -f) >>$log || git rebase --abort
+git checkout users/rurban/patches && \
+  (git rebase --reapply-cherry-picks master && git push origin -f) >>$log || git rebase --abort
+
+_cron_post
+git push origin -f >>$log

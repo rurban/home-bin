@@ -1,0 +1,8 @@
+#!/bin/sh
+for d in libredwg nbperf safeclib smhasher libu8ident
+do
+    # test -d $d/.git/git-bug
+    cd ~/Software/$d
+    echo $d
+    git bug bridge pull
+done

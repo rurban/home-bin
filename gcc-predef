@@ -1,0 +1,3 @@
+#!/bin/sh
+CC=${CC:-gcc}
+$CC -dM -E - < /dev/null

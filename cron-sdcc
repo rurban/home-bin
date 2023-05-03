@@ -1,9 +1,9 @@
 #!/bin/sh
 
-cd ~/Software/pcre2
+cd ~/Software/sdcc
 branch=`git branch|grep '^\* '|cut -c3-`
 STASH=
-log=/tmp/cron-pcre.log
+log=/tmp/cron-sdcc.log
 
 date >$log
 git diff | exit
@@ -18,18 +18,17 @@ if [ "$branch" != master ]; then
     fi
 fi
 
-#(git svn fetch && git merge svn/trunk && \
+#(git fetch up && \
+#    git reset -q --hard up/master && \
 #    git push -f origin master) 2>>$log >>$log
+#
+#(git checkout ci && git pull --rebase || git rebase --abort) 2>>$log >>$log
+#git checkout master  2>>$log >>$log
 
-(git pull up master && \
+(git svn fetch && git rebase git-svn && \
     git push -f origin master) 2>>$log >>$log
 
-#if grep -q 'refs/remotes/svn/trunk' $log; then
-if grep -q '^Updating ' $log; then
-    # need to rebase. pass the log to mail
-    true
-else
-    # early silent exit
+if grep -q '^no changes found' $log; then
     git checkout -q $branch
     if [ x$STASH = x1 ]; then
         git stash -q pop
@@ -38,11 +37,12 @@ else
 fi
 
 # for the cron mail
-cat $log >>/var/log/cron-pcre.log
+cat $log >>/var/log/cron-sdcc.log
 cat $log
 #git checkout ci && \
-#  git rebase master && \
+#  git rebase --reapply-cherry-picks master && \
 #  git push origin -f
+
 #./upd.sh
 git checkout $branch
 

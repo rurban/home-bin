@@ -1,25 +1,16 @@
 #!/bin/sh
 
 cd ~/Software/clisp || exit
-branch=`git branch|grep '^\* '|cut -c3-`
-STASH=
-log=/tmp/cron-clisp.log
+tmp=/tmp/cron-clisp.log
+log=/var/log/cron-clisp.log
 
-date >$log
-if [ "$branch" != master ]; then
-    if git checkout -q master; then
-        true
-    else
-        git stash save cron 2>&1 >>$log
-        STASH=1
-        git reset --hard    2>&1 >>$log
-        git checkout master 2>&1 >>$log
-    fi
-fi
+. ~/bin/_cron_common
+_cron_pre
 
 (git fetch up && \
     git reset -q --hard up/master && \
-    git push -f origin master) 2>>$log >>$log
+    git push -f origin master && \
+    git push -f gh master) 2>>$log >>$log
 
 if grep -q '^no changes found' $log; then
     git checkout -q $branch
@@ -30,17 +21,16 @@ if grep -q '^no changes found' $log; then
 fi
 
 # for the cron mail
-cat $log >>/var/log/cron-clisp.log
-cat $log
-git checkout ci && \
-  git rebase --reapply-cherry-picks master && \
-  git checkout bugfixes && \
-  git rebase --reapply-cherry-picks ci && \
-  git checkout translate && \
-  git rebase --reapply-cherry-picks bugfixes && \
-  git push origin -f
+cat $tmp
+cat $tmp >>$log
 
-git checkout $branch
-if [ x$STASH = x1 ]; then
-    git stash -q pop
-fi
+git checkout ci && \
+  git rebase master && \
+  git checkout bugfixes && \
+  git rebase ci && \
+  git checkout translate && \
+  git rebase bugfixes && \
+  git push origin -f && \
+  git push gh -f
+
+_cron_post

@@ -1,0 +1,31 @@
+#!/bin/sh
+
+cd ~/Software/vim
+branch=`git branch --no-color | grep '^\* ' | cut -c3-`
+STASH=
+log=/tmp/cron-vim.log
+
+date >$log
+git diff | exit
+(git fetch && git pull origin master) 2>>$log >>$log
+#git submodule update --init --recursive 2>>$log >>$log
+
+# for the cron mail
+cat $log >>/var/log/cron-vim.log
+cat $log
+
+# extract xxd patches and apply to xxd
+cd src/xxd
+git log --format="%h" xxd.c | head -n1 > .last-hash
+if cmp .last-hash .prev-hash; then
+    exit 0;
+fi
+echo fetch `cat .prev-hash` to `cat .last-hash`
+git format-patch `cat .prev-hash`..`cat .last-hash` xxd.c | tee fp.log
+mv .last-hash .prev-hash
+mv 0*.patch fp.log
+cd ~/Software/xxd/
+sed -i 's,src/xxd/,,g' `cat fp.log`
+git am -p0 `cat fp.log` || git am --abort
+
+git push origin master

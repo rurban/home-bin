@@ -1,0 +1,31 @@
+#!/bin/sh
+
+cd ~/Software/tinycc
+tmp=/tmp/cron-tinycc.log
+log=/var/log/cron-tinycc.log
+defbranch=mob
+. ~/bin/_cron_common
+_cron_pre
+
+(git pull cz mob && \
+    git push -f origin mob) 2>>$tmp >>$tmp
+
+if grep -q '^Updating ' $tmp; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    _cron_post
+    exit
+fi
+
+# for the cron mail
+cat $tmp
+cat $tmp >>$log
+
+make -sj && make -sj test && sudo make install
+
+#git checkout xoshiro && \
+#  (git rebase mob && git push origin -f) || git rebase --abort
+
+_cron_post

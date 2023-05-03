@@ -1,0 +1,28 @@
+#!/bin/sh
+
+cd ~/Software/cbmc
+tmp=/tmp/cron-cbmc.log
+log=/var/log/cron-cbmc.log
+defbranch=develop
+
+. ~/bin/_cron_common
+_cron_pre
+
+(git fetch up && git pull up develop && \
+    git push origin develop) 2>>$log >>$log
+git submodule update --init --recursive 2>>$log >>$log
+
+# for the cron mail
+cat $tmp >>$log
+cat $tmp
+
+(git checkout lto && \
+  git rebase --reapply-cherry-picks develop && \
+  git checkout march-native && \
+  git rebase --reapply-cherry-picks lto && \
+  git checkout version && \
+  git rebase march-native && \
+  git push origin -f \
+) || git rebase --abort
+
+_cron_post
