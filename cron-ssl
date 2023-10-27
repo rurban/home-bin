@@ -40,4 +40,4 @@ cat $tmp
 cat $tmp >>$log
 
 _cron_post
-git push origin -f >>$log
+#git push origin -f >>$log

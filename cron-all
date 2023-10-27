@@ -1,11 +1,16 @@
 #!/bin/sh
 set -ex
+sh -x ~/bin/cron-assimp
+sh -x ~/bin/cron-cannes-ratings-flychk
 sh -x ~/bin/cron-cbmc
 sh -x ~/bin/cron-ccache
 sh -x ~/bin/cron-clisp
 sh -x ~/bin/cron-coreutils
 sh -x ~/bin/cron-gcc
+sh -x ~/bin/cron-git-bridge
 sh -x ~/bin/cron-gdb
+sh -x ~/bin/cron-hardsqlite
+sh -x ~/bin/cron-libredwg
 sh -x ~/bin/cron-pcre
 sh -x ~/bin/cron-qemu-stm32
 sh -x ~/bin/cron-rune
@@ -13,4 +18,5 @@ sh -x ~/bin/cron-sdcc
 sh -x ~/bin/cron-simdutf
 sh -x ~/bin/cron-ssh
 sh -x ~/bin/cron-ssl
+sh -x ~/bin/cron-tinycc
 sh -x ~/bin/cron-vim-xxd

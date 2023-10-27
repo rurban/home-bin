@@ -1,5 +1,5 @@
 #!/bin/sh
-test -n $SSH_AUTH_SOCK || export SSH_AUTH_SOCK=/run/user/1000/keyring/ssh
+test -n "$SSH_AUTH_SOCK" || export SSH_AUTH_SOCK=/run/user/1000/keyring/ssh
 
 _cron_pre() {
   branch=`git branch --no-color | grep '^\* ' | cut -c3-`
@@ -12,7 +12,7 @@ _cron_pre() {
       date >$tmp
       git diff | exit
       if [ "$branch" != $defbranch ]; then
-          if git checkout -q $defbranch; then
+          if git checkout -q $defbranch 2>/dev/null; then
               true
           else 
               git stash save cron 2>&1 >>$tmp
@@ -25,7 +25,7 @@ _cron_pre() {
 }
 
 _cron_post() {
-    git checkout $branch >>$log
+    git checkout -q $branch >>$log
     if [ x$STASH = x1 ]; then
         git stash -q pop
     fi

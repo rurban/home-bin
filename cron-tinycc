@@ -23,7 +23,9 @@ fi
 cat $tmp
 cat $tmp >>$log
 
-make -sj && make -sj test && sudo make install
+make clean || true
+./configure && \
+  make -sj && make -sj test && sudo make install && tcc --version
 
 #git checkout xoshiro && \
 #  (git rebase mob && git push origin -f) || git rebase --abort
