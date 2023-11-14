@@ -1,0 +1,29 @@
+#!/bin/sh
+
+cd ~/Software/hardsqlite
+tmp=/tmp/cron-hardsqlite.log
+log=/var/log/cron-hardsqlite.log
+
+. ~/bin/_cron_common
+_cron_pre
+
+(git pull up && \
+    git push -f origin master) 2>>$tmp >>$tmp
+
+if grep -q '^Updating ' $tmp; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    _cron_post
+    exit
+fi
+
+# for the cron mail
+cat $tmp
+cat $tmp >>$log
+git checkout hardsqlite && \
+  (git rebase master && git push origin -f) >>$log || git rebase --abort
+git push origin -f >>$log
+
+_cron_post

@@ -1,0 +1,34 @@
+#!/bin/sh
+
+cd ~/Software/kaitai-cad
+tmp=/tmp/cron-kaitai-cad.log
+log=/var/log/cron-kaitai-cad.log
+. ~/bin/_cron_common
+_cron_pre
+
+(git pull up && \
+    git push -f origin master) 2>>$tmp >>$tmp
+
+if grep -q '^Updating ' $tmp; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    _cron_post
+    exit
+fi
+
+#git checkout dxf1 2>>$tmp >>$tmp
+#if git pull --rebase up master; then
+#    (git rebase master && git push origin -f) 2>>$tmp >>$tmp \
+#	|| git rebase --abort  2>>$tmp >>$tmp
+#else
+#  git rebase --abort  2>>$tmp >>$tmp
+#fi  
+
+# for the cron mail
+cat $tmp
+cat $tmp >>$log
+
+_cron_post
+git push origin -f >>$log

@@ -9,6 +9,7 @@ sh -x ~/bin/cron-coreutils
 sh -x ~/bin/cron-gcc
 sh -x ~/bin/cron-git-bridge
 sh -x ~/bin/cron-gdb
+sh -x ~/bin/cron-hamt
 sh -x ~/bin/cron-hardsqlite
 sh -x ~/bin/cron-libredwg
 sh -x ~/bin/cron-pcre

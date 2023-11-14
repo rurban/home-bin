@@ -1,0 +1,35 @@
+#!/bin/sh
+
+cd ~/Software/hamt
+defbranch=main
+#tmp=/tmp/cron-hamt.log
+#log=/var/log/cron-hamt.log
+. ~/bin/_cron_common
+_cron_pre
+
+(git pull up && \
+    git push -f origin main) 2>>$tmp >>$tmp
+
+if grep -q '^Updating ' $tmp; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    _cron_post
+    exit
+fi
+
+git checkout unames 2>>$tmp >>$tmp
+if git pull --rebase up main; then
+    (git rebase main && git push origin -f) 2>>$tmp >>$tmp \
+	|| git rebase --abort  2>>$tmp >>$tmp
+else
+  git rebase --abort  2>>$tmp >>$tmp
+fi  
+
+# for the cron mail
+cat $tmp
+cat $tmp >>$log
+
+_cron_post
+git push origin -f >>$log

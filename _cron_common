@@ -4,6 +4,12 @@ test -n "$SSH_AUTH_SOCK" || export SSH_AUTH_SOCK=/run/user/1000/keyring/ssh
 _cron_pre() {
   branch=`git branch --no-color | grep '^\* ' | cut -c3-`
   STASH=
+  if test -z $log; then
+      pwd="`pwd`"
+      base="`basename $pwd`"
+      log=/var/log/cron-$base.log
+      tmp=/tmp/cron-$base.log
+  fi
   if test -z $defbranch; then defbranch=master; fi
   if test -n $log; then
       if [ ! -w $log ]; then
