@@ -1,0 +1,6 @@
+#!/bin/sh
+cd ~/Documents/cannes-ratings
+if timeout 5 ~/bin/flyctl logs -a cannes-ratings | grep "connection error:"
+then
+   ~/bin/flyctl apps restart cannes-ratings
+fi

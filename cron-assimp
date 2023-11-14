@@ -1,0 +1,30 @@
+#!/bin/sh
+
+cd ~/Software/assimp
+tmp=/tmp/cron-assimp.log
+log=/var/log/cron-assimp.log
+. ~/bin/_cron_common
+_cron_pre
+
+(git pull up && \
+    git push -f origin master) 2>>$tmp >>$tmp
+
+if grep -q '^Updating ' $tmp; then
+    # need to rebase. pass the log to mail
+    true
+else
+    # early silent exit
+    _cron_post
+    exit
+fi
+
+(git checkout dxf1 && git rebase up/master && \
+     git push origin -f dxf1) 2>>$tmp >>$tmp \
+  || git rebase --abort 2>>$tmp >>$tmp
+
+# for the cron mail
+cat $tmp
+cat $tmp >>$log
+
+_cron_post
+git push origin -f >>$log

@@ -1,0 +1,50 @@
+#!/bin/sh
+
+cd ~/Software/qemu-stm32
+branch=`git branch --no-color | grep '^\* ' | cut -c3-`
+STASH=
+log=/tmp/cron-qemu-stm32.log
+
+date >$log
+git diff | exit
+if [ "$branch" != master ]; then
+    if git checkout -q master; then
+        true
+    else
+        git stash save cron 2>&1 >>$log
+        STASH=1
+        git reset --hard    2>&1 >>$log
+        git checkout master 2>&1 >>$log
+    fi
+fi
+
+(git fetch up && git pull up master && \
+    git push -f origin master) 2>>$log >>$log
+git submodule sync 2>>$log >>$log
+git submodule update --init --recursive 2>>$log >>$log
+
+# for the cron mail
+cat $log >>/var/log/cron-qemu-stm32.log
+cat $log
+
+git checkout atmega && \
+  git rebase --reapply-cherry-picks master && \
+  git checkout stm32 && \
+  git rebase --reapply-cherry-picks atmega && \
+  git push origin -f
+
+#./upd.sh
+git checkout $branch
+if [ x$STASH = x1 ]; then
+    git stash -q pop
+fi
+
+#if grep -q 'refs/remotes/master' $log; then
+#    true
+#else
+#    git checkout -q $branch
+#    if [ x$STASH = x1 ]; then
+#        git stash -q pop
+#    fi
+#    exit
+#fi
