@@ -26,6 +26,8 @@ cat $tmp >>$log
 
 git checkout ci && \
   git rebase master && \
+  git checkout asan && \
+  git rebase ci && \
   git checkout bugfixes && \
   git rebase ci && \
   git checkout translate && \

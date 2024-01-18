@@ -25,9 +25,9 @@ git checkout compatability-typo &&
 git checkout homoglyph-pr103027 &&
   (git rebase master && git push origin -f) 2>>$tmp >>$tmp \
 	|| git rebase --abort
-git checkout fhardened &&
-  (git rebase master && git push origin -f) 2>>$tmp >>$tmp \
-	|| git rebase --abort
+#git checkout fhardened &&
+#  (git rebase master && git push origin -f) 2>>$tmp >>$tmp \
+#	|| git rebase --abort
 
 # for the cron mail
 cat $tmp

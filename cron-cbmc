@@ -16,7 +16,10 @@ git submodule update --init --recursive 2>>$log >>$log
 cat $tmp >>$log
 cat $tmp
 
-(git checkout lto && \
+(
+git checkout ffs && \
+  git rebase --reapply-cherry-picks develop && \
+  git checkout lto && \
   git rebase --reapply-cherry-picks develop && \
   git checkout march-native && \
   git rebase --reapply-cherry-picks lto && \
