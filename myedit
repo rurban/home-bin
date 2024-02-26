@@ -1,10 +1,14 @@
 #!/bin/sh
 # emacsclient starter which accepts path/file:line
-EPREFIX=/usr/local/bin
+EPREFIX=/usr/bin
+#EPREFIX=/usr/local/bin
 #EPREFIX=/snap/bin
+
 # TODO: check for existance of $1 because a string:num filename might exist
 split_fileline() {
-  a=`perl -e'$_=shift; print (/^(.*):(\d+)$/ ? "+$2 $1" : $_)' "$a"`
+    a=`perl -e'$_=shift;
+if (/ /) { print (/^(.*):(\d+)$/ ? "+$2 \"$1\"" : "\"$_\"") }
+else { print (/^(.*):(\d+)$/ ? "+$2 $1" : $_) }' "$a"`
 }
 # check if emacs needs to be started
 if [ -z "`pgrep -l emacs`" ]; then
@@ -15,5 +19,5 @@ fi
 for a in "$@"
 do
   split_fileline "\"$a\""
-  $EPREFIX/emacsclient -n "$a" &
+  $EPREFIX/emacsclient -n $a &
 done

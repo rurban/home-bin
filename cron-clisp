@@ -33,6 +33,6 @@ git checkout ci && \
   git checkout translate && \
   git rebase bugfixes && \
   git push origin -f && \
-  git push gh -f
+  git push gl -f
 
 _cron_post
