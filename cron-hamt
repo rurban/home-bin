@@ -7,7 +7,7 @@ defbranch=main
 . ~/bin/_cron_common
 _cron_pre
 
-(git pull up && \
+(git pull up main && \
     git push -f origin main) 2>>$tmp >>$tmp
 
 if grep -q '^Updating ' $tmp; then
